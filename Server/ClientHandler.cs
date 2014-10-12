@@ -1233,6 +1233,10 @@ namespace DarkMultiPlayerServer
                         {
                             string channel = mr.Read<string>();
                             string message = mr.Read<string>();
+                            if (message.Length > 128)
+                            {
+                                message = message.Substring(0, 128);
+                            }
                             if (channel != "")
                             {
                                 foreach (KeyValuePair<string, List<string>> playerEntry in playerChatChannels)
