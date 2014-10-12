@@ -21,6 +21,12 @@ namespace DarkMultiPlayerCommon
         //Program version. This is written in the build scripts.
         public const string PROGRAM_VERSION = "Custom";
 
+        public static string CalculateSHA256HashFromString(string text)
+        {
+            UTF8Encoding encoder = new UTF8Encoding();
+            return CalculateSHA256Hash(encoder.GetBytes(text));
+        }
+
         public static string CalculateSHA256Hash(string fileName)
         {
             return CalculateSHA256Hash(File.ReadAllBytes(fileName));
@@ -584,5 +590,23 @@ namespace DarkMultiPlayerCommon
         NOT_WHITELISTED = 7,
         INVALID_PLAYERNAME = 98,
         MALFORMED_HANDSHAKE = 99
+    }
+
+    public class GroupObject
+    {
+        public GroupObject(string groupOwner, GroupPrivacy groupPrivacy)
+        {
+            this.groupOwner = groupOwner;
+            this.groupPrivacy = groupPrivacy;
+        }
+        public string groupOwner;
+        public GroupPrivacy groupPrivacy;
+        public string groupPasswordSalt;
+        public string groupPassword;
+    }
+    public enum GroupPrivacy
+    {
+        PUBLIC,
+        PRIVATE,
     }
 }
