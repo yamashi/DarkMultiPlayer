@@ -12,15 +12,17 @@ namespace DarkMultiPlayerServer
         private Dictionary<string, string> playerGroup = new Dictionary<string, string>();
         private string groupDirectory;
         private string playerDirectory;
-        private string playerTokenDirectory;
+        private string playerKeyPairDirectory;
+
         public GroupSystem()
         {
             groupDirectory = Path.Combine(Server.universeDirectory, "Groups", "Groups");
             playerDirectory = Path.Combine(Server.universeDirectory, "Groups", "Players");
-            playerTokenDirectory = Path.Combine(Server.universeDirectory, "Players");
+            playerKeyPairDirectory = Path.Combine(Server.universeDirectory, "Players");
             LoadGroups();
             LoadPlayers();
         }
+
         private void LoadGroups()
         {
             string[] groupFiles = Directory.GetFiles(groupDirectory, "*.txt", SearchOption.TopDirectoryOnly);
@@ -51,6 +53,7 @@ namespace DarkMultiPlayerServer
             }
             DarkLog.Debug("Groups loaded");
         }
+
         private void LoadPlayers()
         {
             string[] playerFiles = Directory.GetFiles(playerDirectory, "*.txt", SearchOption.TopDirectoryOnly);
@@ -75,6 +78,7 @@ namespace DarkMultiPlayerServer
             }
             DarkLog.Debug("Groups members loaded");
         }
+
         private void SaveGroup(string groupName)
         {
             string groupFile = Path.Combine(groupDirectory, groupName + ".txt");
@@ -101,6 +105,7 @@ namespace DarkMultiPlayerServer
                 }
             }
         }
+
         private void SavePlayer(string playerName)
         {
             string playerFile = Path.Combine(playerDirectory, playerName + ".txt");
@@ -122,6 +127,7 @@ namespace DarkMultiPlayerServer
                 }
             }
         }
+
         /// <summary>
         /// Creates the group. Returns true if successful
         /// </summary>
@@ -149,6 +155,7 @@ namespace DarkMultiPlayerServer
             SavePlayer(ownerName);
             return true;
         }
+
         /// <summary>
         /// Make a player join the group. Returns true if the group was joined.
         /// </summary>
@@ -173,6 +180,7 @@ namespace DarkMultiPlayerServer
             SavePlayer(playerName);
             return true;
         }
+
         /// <summary>
         /// Make a player leave the group. Returns true if the group was left.
         /// </summary>
@@ -200,6 +208,7 @@ namespace DarkMultiPlayerServer
             SavePlayer(playerName);
             return true;
         }
+
         public bool RemoveGroup(string groupName)
         {
             if (!groupInfo.ContainsKey(groupName))
@@ -221,6 +230,7 @@ namespace DarkMultiPlayerServer
             SaveGroup(groupName);
             return true;
         }
+
         /// <summary>
         /// Sets the group owner. If the group or player does not exist, or the player already belongs to a different group, this method returns false
         /// </summary>
@@ -253,6 +263,7 @@ namespace DarkMultiPlayerServer
             SaveGroup(groupName);
             return true;
         }
+
         /// <summary>
         /// Sets the group password, with a raw, unencrypted password. Set to null to remove the password. Returns true on success.
         /// </summary>
@@ -272,6 +283,7 @@ namespace DarkMultiPlayerServer
             }
             return SetGroupPassword(groupName, Common.CalculateSHA256HashFromString(password));
         }
+
         /// <summary>
         /// Sets the group password, with an unsalted SHA256 password. Set to null to remove the password. Returns true on success.
         /// </summary>
@@ -294,6 +306,7 @@ namespace DarkMultiPlayerServer
             string saltedPassword = Common.CalculateSHA256HashFromString(salt + passwordSHA256);
             return SetGroupPassword(groupName, salt, saltedPassword);
         }
+
         /// <summary>
         /// Sets the group password, with a specified salt and salted password. Returns true on success
         /// </summary>
@@ -309,6 +322,7 @@ namespace DarkMultiPlayerServer
             SaveGroup(groupName);
             return true;
         }
+
         /// <summary>
         /// Sets the group privacy. Set SHAPassword to null to remove the password. Returns true on success
         /// </summary>
@@ -327,6 +341,7 @@ namespace DarkMultiPlayerServer
             SaveGroup(groupName);
             return true;
         }
+
         /// <summary>
         /// Returns a string array of group names
         /// </summary>
@@ -340,6 +355,7 @@ namespace DarkMultiPlayerServer
             knownGroups.Sort();
             return knownGroups.ToArray();
         }
+
         public string[] GetGroupMembers(string groupName)
         {
             List<string> groupMembers = new List<string>();
@@ -352,6 +368,7 @@ namespace DarkMultiPlayerServer
             }
             return groupMembers.ToArray();
         }
+
         /// <summary>
         /// Check if a group exists
         /// </summary>
@@ -359,12 +376,13 @@ namespace DarkMultiPlayerServer
         {
             return groupInfo.ContainsKey(groupName);
         }
+
         /// <summary>
         /// Check if a player is registered
         /// </summary>
         public bool PlayerExists(string playerName)
         {
-            string playerFile = Path.Combine(playerTokenDirectory, playerName + ".txt");
+            string playerFile = Path.Combine(playerKeyPairDirectory, playerName + ".txt");
             return File.Exists(playerFile);
         }
         /// <summary>
@@ -378,6 +396,7 @@ namespace DarkMultiPlayerServer
             }
             return null;
         }
+
         /// <summary>
         /// Returns the group owner. If the group does not exist, returns null
         /// </summary>
@@ -389,6 +408,7 @@ namespace DarkMultiPlayerServer
             }
             return groupInfo[groupName].groupOwner;
         }
+
         /// <summary>
         /// Checks the group password for a match (Raw password). Returns true on success. Always returns false if the group password is not set.
         /// </summary>
@@ -404,6 +424,7 @@ namespace DarkMultiPlayerServer
             }
             return CheckGroupPassword(groupName, Common.CalculateSHA256HashFromString(rawPassword));
         }
+
         /// <summary>
         /// Checks the group password for a match (Raw password). Returns true on success. Always returns false if the group password is not set.
         /// </summary>
@@ -421,6 +442,7 @@ namespace DarkMultiPlayerServer
             string checkPassword = Common.CalculateSHA256HashFromString(passwordSalt + shaPassword);
             return CheckGroupPassword(groupName, passwordSalt, checkPassword);
         }
+
         /// <summary>
         /// Checks the group password for a match (Raw password). Returns true on success. Always returns false if the group password is not set.
         /// </summary>
@@ -436,6 +458,7 @@ namespace DarkMultiPlayerServer
             }
             return (groupInfo[groupName].groupPasswordSalt == saltSHA256 && groupInfo[groupName].groupPassword == saltedPasswordSHA256);
         }
+
         /// <summary>
         /// Returns the group privacy. If the group does not exist, returns PUBLIC
         /// </summary>

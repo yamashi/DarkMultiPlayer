@@ -52,11 +52,18 @@
     <Compile Include="BackwardsCompatibility.cs" />
     <Compile Include="DMPModInterface.cs" />
     <Compile Include="GroupSystem.cs" />
+    <Compile Include="MessageHandlers\GroupSystemHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{423C5A4B-EA79-450D-BD86-5B46141D58D1}</Project>
       <Name>Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="MessageHandlers\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MessageHandlers\REFACTOR.txt" />
   </ItemGroup>
 </Project>

@@ -393,6 +393,7 @@ namespace DarkMultiPlayerCommon
         MOTD_REQUEST,
         WARP_CONTROL,
         LOCK_SYSTEM,
+        GROUP_SYSTEM,
         MOD_DATA,
         SPLIT_MESSAGE,
         CONNECTION_END
@@ -427,6 +428,7 @@ namespace DarkMultiPlayerCommon
         WARP_CONTROL,
         ADMIN_SYSTEM,
         LOCK_SYSTEM,
+        GROUP_SYSTEM,
         MOD_DATA,
         SPLIT_MESSAGE,
         CONNECTION_END
@@ -528,6 +530,20 @@ namespace DarkMultiPlayerCommon
         LIST,
         ADD,
         REMOVE,
+    }
+
+    public enum GroupMessageType
+    {
+        //From server
+        LIST,
+        ADD,
+        REMOVE,
+        //From client
+        CREATE,
+        DISBAND,
+        HANDOVER_OWNERSHIP,
+        JOIN,
+        LEAVE,
     }
 
     public enum LockMessageType
