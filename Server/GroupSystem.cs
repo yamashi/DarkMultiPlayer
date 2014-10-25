@@ -6,6 +6,7 @@ namespace DarkMultiPlayerServer
 {
     public class GroupSystem
     {
+        private static GroupSystem singleton;
         //groupName, group info
         private Dictionary<string, GroupObject> groupInfo = new Dictionary<string, GroupObject>();
         //playerName, groupName
@@ -21,6 +22,13 @@ namespace DarkMultiPlayerServer
             playerKeyPairDirectory = Path.Combine(Server.universeDirectory, "Players");
             LoadGroups();
             LoadPlayers();
+        }
+
+        public static GroupSystem fetch
+        {
+            get {
+                return singleton;
+            }
         }
 
         private void LoadGroups()
@@ -469,6 +477,11 @@ namespace DarkMultiPlayerServer
                 return GroupPrivacy.PUBLIC;
             }
             return groupInfo[groupName].groupPrivacy;
+        }
+
+        public static void Reset()
+        {
+            singleton = new GroupSystem();
         }
     }
 }

@@ -39,7 +39,7 @@ namespace DarkMultiPlayerServer
         private static Dictionary<string, int> playerUploadedScreenshotIndex;
         private static Dictionary<string, Dictionary<string,int>> playerDownloadedScreenshotIndex;
         private static Dictionary<string, string> playerWatchScreenshot;
-        private static LockSystem lockSystem;
+        public static LockSystem lockSystem;
         //When a client hits 100kb on the send queue, DMPServer will throw out old duplicate messages
         private const int OPTIMIZE_QUEUE_LIMIT = 100 * 1024;
         #region Main loop
@@ -63,6 +63,7 @@ namespace DarkMultiPlayerServer
                 playerDownloadedScreenshotIndex = new Dictionary<string, Dictionary <string, int>>();
                 playerWatchScreenshot = new Dictionary<string, string>();
                 lockSystem = new LockSystem();
+                GroupSystem.Reset();
                 LoadSavedSubspace();
                 LoadBans();
                 LoadAdmins();
@@ -2576,7 +2577,7 @@ namespace DarkMultiPlayerServer
             }
         }
 
-        private static void SendChatMessageToClient(ClientObject client, string messageText)
+        public static void SendChatMessageToClient(ClientObject client, string messageText)
         {
             ServerMessage newMessage = new ServerMessage();
             newMessage.type = ServerMessageType.CHAT_MESSAGE;
@@ -3028,7 +3029,7 @@ namespace DarkMultiPlayerServer
             SendToClient(client, newMessage, true);
         }
 
-        private static void SendConnectionEnd(ClientObject client, string reason)
+        public static void SendConnectionEnd(ClientObject client, string reason)
         {
             ServerMessage newMessage = new ServerMessage();
             newMessage.type = ServerMessageType.CONNECTION_END;
