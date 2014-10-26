@@ -76,6 +76,11 @@ namespace DarkMultiPlayer
         private delegate bool AddCrewMemberToRosterDelegate(ProtoCrewMember pcm);
 
         private AddCrewMemberToRosterDelegate AddCrewMemberToRoster;
+        //System.Reflection hackiness to deselect the removed vessel in the tracking station:
+        private delegate void SetVesselDelegate(Vessel vessel,bool focus);
+        private SetVesselDelegate SetVessel;
+        private FieldInfo selectedVessel;
+        private SpaceTracking spaceTracking;
 
         public static VesselWorker fetch
         {
@@ -1989,8 +1994,9 @@ namespace DarkMultiPlayer
             if (killVessel != null)
             {
                 //TODO: Deselect the vessel in the tracking station if we are about to kill it.
+                RemoveKerbalsFromVessel(killVessel);
+                DeselectVesselFromTrackingStation(killVessel);
                 DarkLog.Debug("Killing vessel: " + killVessel.id.ToString());
-                killVessel.DespawnCrew();
                 //Add it to the delay kill list to make sure it dies.
                 //With KSP, If it doesn't work first time, keeping doing it until it does.
                 if (!delayKillVessels.Contains(killVessel))
@@ -2016,6 +2022,70 @@ namespace DarkMultiPlayer
                 catch (Exception killException)
                 {
                     DarkLog.Debug("Error destroying vessel: " + killException);
+                }
+            }
+        }
+
+        private void RemoveKerbalsFromVessel(Vessel vessel)
+        {
+            if (vessel.loaded)
+            {
+                foreach (Part part in vessel.parts)
+                {
+                    List<ProtoCrewMember> copyList = new List<ProtoCrewMember>(part.protoModuleCrew);
+                    foreach (ProtoCrewMember pcm in copyList)
+                    {
+                        part.RemoveCrewmember(pcm);
+                    }
+                }
+            }
+        }
+
+        private void DeselectVesselFromTrackingStation(Vessel vessel)
+        {
+            if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+            {
+                if (spaceTracking == null)
+                {
+                    //Clear SetVessel to update the delegate
+                    SetVessel = null;
+                    spaceTracking = GameObject.FindObjectOfType<SpaceTracking>();
+                    if (spaceTracking == null)
+                    {
+                        DarkLog.Debug("Unable to find space tracking, skipping deselect");
+                        return;
+                    }
+                }
+
+                if (SetVessel == null)
+                {
+                    MethodInfo setVesselInfo = typeof(SpaceTracking).GetMethod("SetVessel", BindingFlags.Instance | BindingFlags.NonPublic);
+                    if (setVesselInfo != null)
+                    {
+                        SetVessel = (SetVesselDelegate)Delegate.CreateDelegate(typeof(SetVesselDelegate), spaceTracking, setVesselInfo);
+                    }
+                    if (SetVessel == null)
+                    {
+                        DarkLog.Debug("Unable to find SpaceTracking.SetVessel, skipping deselect");
+                        return;
+                    }
+                }
+
+                if (selectedVessel == null)
+                {
+                    DarkLog.Debug("Looking for '" + ((char)4).ToString() + "'");
+                    selectedVessel = typeof(SpaceTracking).GetField(((char)4).ToString());
+                    if (selectedVessel == null)
+                    {
+                        DarkLog.Debug("Unable to find SpaceTracking.0x04, skipping deselect");
+                        return;
+                    }
+                }
+
+                if ((Vessel)selectedVessel.GetValue(spaceTracking) == vessel)
+                {
+                    DarkLog.Debug("Deselecting selected vessel for vessel replacement");
+                    SetVessel(null, true);
                 }
             }
         }
