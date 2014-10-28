@@ -273,7 +273,7 @@ namespace DarkMultiPlayerServer
         }
 
         /// <summary>
-        /// Sets the group password, with a raw, unencrypted password. Set to null to remove the password. Returns true on success.
+        /// Sets the group password, with a raw, unencrypted password. Set to null or empty string to remove the password. Returns true on success.
         /// </summary>
         public bool SetGroupPasswordRaw(string groupName, string password)
         {
@@ -282,7 +282,7 @@ namespace DarkMultiPlayerServer
                 DarkLog.Debug("Cannot set group password, " + groupName + " doesn't exist");
                 return false;
             }
-            if (password == null)
+            if (password == null || password == "")
             {
                 groupInfo[groupName].groupPasswordSalt = null;
                 groupInfo[groupName].groupPassword = null;
@@ -293,7 +293,7 @@ namespace DarkMultiPlayerServer
         }
 
         /// <summary>
-        /// Sets the group password, with an unsalted SHA256 password. Set to null to remove the password. Returns true on success.
+        /// Sets the group password, with an unsalted SHA256 password. Set to null or empty string to remove the password. Returns true on success.
         /// </summary>
         public bool SetGroupPassword(string groupName, string passwordSHA256)
         {
@@ -302,7 +302,7 @@ namespace DarkMultiPlayerServer
                 DarkLog.Debug("Cannot set group password, " + groupName + " doesn't exist");
                 return false;
             }
-            if (passwordSHA256 == null)
+            if (passwordSHA256 == null || passwordSHA256 == "")
             {
                 groupInfo[groupName].groupPasswordSalt = null;
                 groupInfo[groupName].groupPassword = null;
@@ -324,6 +324,13 @@ namespace DarkMultiPlayerServer
             {
                 DarkLog.Debug("Cannot set group password, " + groupName + " doesn't exist");
                 return false;
+            }
+            if (saltedPasswordSHA256 == null || saltedPasswordSHA256 == "")
+            {
+                groupInfo[groupName].groupPasswordSalt = null;
+                groupInfo[groupName].groupPassword = null;
+                SaveGroup(groupName);
+                return true;
             }
             groupInfo[groupName].groupPasswordSalt = saltSHA256;
             groupInfo[groupName].groupPassword = saltedPasswordSHA256;

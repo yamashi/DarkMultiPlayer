@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DarkMultiPlayerCommon;
 using MessageStream;
 
@@ -11,30 +12,116 @@ namespace DarkMultiPlayerServer.MessageHandler
             bool relayMessage = false;
             using (MessageReader mr = new MessageReader(messageData, false))
             {
-                int messageType = mr.Read<int>();
+                GroupMessageType messageType = (GroupMessageType)mr.Read<int>();
                 string fromPlayer = mr.Read<string>();
                 if (client.playerName != fromPlayer)
                 {
                     ClientHandler.SendConnectionEnd(client, "Kicked for sending a group message for another player");
                     return;
                 }
-                switch ((GroupMessageType)messageType)
+                switch (messageType)
                 {
                     case GroupMessageType.CREATE:
                         {
                             string groupName = mr.Read<string>();
-                            if (GroupSystem.fetch.CreateGroup(groupName, fromPlayer, GroupPrivacy.PUBLIC))
+                            GroupPrivacy groupPrivacy = (GroupPrivacy)mr.Read<int>();
+                            if (GroupSystem.fetch.CreateGroup(groupName, fromPlayer, groupPrivacy))
                             {
-                                ServerMessage newMessage = new ServerMessage();
-                                newMessage.type = ServerMessageType.GROUP_SYSTEM;
-                                newMessage.data = messageData;
-                                //Relay it back to everyone to confirm
-                                ClientHandler.SendToAll(null, newMessage, true);
+                                relayMessage = true;
                             }
                             else
                             {
                                 //Notify of failure
                                 ClientHandler.SendChatMessageToClient(client, "Failed to create group: Group already exists");
+                            }
+                        }
+                        break;
+                    case GroupMessageType.HANDOVER_OWNERSHIP:
+                        {
+                            string groupName = mr.Read<string>();
+                            string toPlayer = mr.Read<string>();
+                            if (GroupSystem.fetch.GroupExists(groupName))
+                            {
+                                if (GroupSystem.fetch.GetGroupOwner(groupName) == fromPlayer)
+                                {
+                                    if (GroupSystem.fetch.SetGroupOwner(groupName, toPlayer))
+                                    {
+                                        relayMessage = true;
+                                    }
+                                    else
+                                    {
+                                        //Notify of failure
+                                        ClientHandler.SendChatMessageToClient(client, "Failed to handover group.");
+                                    }
+                                }
+                                else
+                                {
+                                    ClientHandler.SendChatMessageToClient(client, "Failed to handover group: You are not the group owner");
+                                }
+                            }
+                            else
+                            {
+                                ClientHandler.SendChatMessageToClient(client, "Failed to handover group: Group does not exist");
+                            }
+                        }
+                        break;
+                    case GroupMessageType.SET_PASSWORD:
+                        {
+                            string groupName = mr.Read<string>();
+                            string groupSalt = mr.Read<string>();
+                            string groupPassword = mr.Read<string>();
+
+                            if (GroupSystem.fetch.GroupExists(groupName))
+                            {
+                                if (GroupSystem.fetch.GetGroupOwner(groupName) == fromPlayer)
+                                {
+                                    if (GroupSystem.fetch.SetGroupPassword(groupName, groupSalt, groupPassword))
+                                    {
+                                        relayMessage = true;
+                                    }
+                                    else
+                                    {
+                                        //Notify of failure
+                                        ClientHandler.SendChatMessageToClient(client, "Failed to set password.");
+                                    }
+                                }
+                                else
+                                {
+                                    ClientHandler.SendChatMessageToClient(client, "Failed to set password: You are not the group owner");
+                                }
+                            }
+                            else
+                            {
+                                ClientHandler.SendChatMessageToClient(client, "Failed to set password: Group doesn't exist");
+                            }
+                        }
+                        break;
+                    case GroupMessageType.SET_PRIVACY:
+                        {
+                            string groupName = mr.Read<string>();
+                            GroupPrivacy groupPrivacy = (GroupPrivacy)mr.Read<int>();
+                            if (GroupSystem.fetch.GroupExists(groupName))
+                            {
+                                if (GroupSystem.fetch.GetGroupOwner(groupName) == fromPlayer)
+                                {
+                                    if (GroupSystem.fetch.SetGroupPrivacy(groupName, groupPrivacy))
+                                    {
+                                        relayMessage = true;
+                                    }
+                                    else
+                                    {
+                                        //Notify of failure
+                                        ClientHandler.SendChatMessageToClient(client, "Failed to set privacy");
+                                    }
+                                }
+                                else
+                                {
+                                    ClientHandler.SendChatMessageToClient(client, "Failed to set privacy: You are not the group owner");
+                                }
+                            }
+                            else
+                            {
+                                ClientHandler.SendChatMessageToClient(client, "Failed to set privacy: Group doesn't exist");
                             }
                         }
                         break;
@@ -62,14 +149,22 @@ namespace DarkMultiPlayerServer.MessageHandler
                     case GroupMessageType.JOIN:
                         {
                             string groupName = mr.Read<string>();
-
                             
                             if (GroupSystem.fetch.GetGroupPrivacy(groupName) == GroupPrivacy.PUBLIC)
                             {
                                 //Public group
                                 if (GroupSystem.fetch.JoinGroup(groupName, fromPlayer))
                                 {
-                                    relayMessage = true;
+                                    ServerMessage newMessage = new ServerMessage();
+                                    newMessage.type = ServerMessageType.GROUP_SYSTEM;
+                                    using (MessageWriter mw = new MessageWriter())
+                                    {
+                                        mw.Write<int>((int)GroupMessageType.JOIN);
+                                        mw.Write<string>(fromPlayer);
+                                        mw.Write<string>(groupName);
+                                        newMessage.data = mw.GetMessageBytes();
+                                    }
+                                    ClientHandler.SendToAll(null, newMessage, true);
                                 }
                                 else
                                 {
@@ -84,7 +179,16 @@ namespace DarkMultiPlayerServer.MessageHandler
                                 {
                                     if (GroupSystem.fetch.JoinGroup(groupName, fromPlayer))
                                     {
-                                        relayMessage = true;
+                                        ServerMessage newMessage = new ServerMessage();
+                                        newMessage.type = ServerMessageType.GROUP_SYSTEM;
+                                        using (MessageWriter mw = new MessageWriter())
+                                        {
+                                            mw.Write<int>((int)GroupMessageType.JOIN);
+                                            mw.Write<string>(fromPlayer);
+                                            mw.Write<string>(groupName);
+                                            newMessage.data = mw.GetMessageBytes();
+                                        }
+                                        ClientHandler.SendToAll(null, newMessage, true);
                                     }
                                     else
                                     {
@@ -124,6 +228,7 @@ namespace DarkMultiPlayerServer.MessageHandler
                             }
                             else
                             {
+                                ClientHandler.SendChatMessageToClient(client, "Failed to leave group: You are the owner of " + groupName);
                             }
                         }
                         break;
@@ -136,6 +241,13 @@ namespace DarkMultiPlayerServer.MessageHandler
                 newMessage.data = messageData;
                 ClientHandler.SendToAll(null, newMessage, true);
             }
+        }
+
+        private void SendGroupList(ClientObject client)
+        {
+            List<string> groupNames = new List<string>();
+            List<GroupPrivacy> groupPrivacy = new List<GroupPrivacy>();
+            Dictionary<string, List<string>> groupMembers = new Dictionary<string, List<string>>();
         }
     }
 }

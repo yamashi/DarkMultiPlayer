@@ -536,12 +536,12 @@ namespace DarkMultiPlayerCommon
     {
         //From server
         LIST,
-        ADD,
-        REMOVE,
         //From client
         CREATE,
         DISBAND,
         HANDOVER_OWNERSHIP,
+        SET_PASSWORD,
+        SET_PRIVACY,
         JOIN,
         LEAVE,
     }
