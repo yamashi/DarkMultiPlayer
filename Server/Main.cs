@@ -333,6 +333,7 @@ namespace DarkMultiPlayerServer
             {
                 DarkLog.Normal("Stopping HTTP server...");
                 httpListener.Stop();
+                httpListener.Close();
             }
         }
 
@@ -343,14 +344,39 @@ namespace DarkMultiPlayerServer
                 DarkLog.Normal("Force stopping HTTP server...");
                 if (httpListener != null)
                 {
+                    bool errors = false;
+                    try
+                    {
+                        httpListener.Stop();
+
+                    }
+                    catch (Exception e)
+                    {
+                        DarkLog.Debug("Error trying to stop HTTP server: " + e);
+                        errors = true;
+                    }
+                    try
+                    {
+                        httpListener.Close();
+
+                    }
+                    catch (Exception e)
+                    {
+                        DarkLog.Debug("Error trying to close HTTP server: " + e);
+                        errors = true;
+                    }
                     try
                     {
                         httpListener.Abort();
                     }
                     catch (Exception e)
                     {
-                        DarkLog.Fatal("Error trying to shutdown HTTP server: " + e);
-                        throw;
+                        errors = true;
+                        DarkLog.Debug("Error trying to abort HTTP server: " + e);
+                    }
+                    if (errors)
+                    {
+                        DarkLog.Debug("Http server errors!");
                     }
                 }
             }
