@@ -29,6 +29,9 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <Reference Include="Lidgren.Network">
+      <HintPath>..\Lidgren.Network.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="MessageWriter">
       <HintPath>..\MessageWriter.dll</HintPath>
@@ -37,10 +40,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BanList.cs" />
+    <Compile Include="GameServer.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="CommandHandler.cs" />
     <Compile Include="ClientHandler.cs" />
     <Compile Include="ScreenshotExpire.cs" />
+    <Compile Include="ServerClient_Struct.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Dekessler.cs" />

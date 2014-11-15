@@ -11,22 +11,20 @@ using System.Security.Cryptography;
 using MessageStream;
 using System.IO;
 using DarkMultiPlayerCommon;
+using Lidgren.Network;
 
 namespace DarkMultiPlayerServer
 {
     public class ClientHandler
     {
+        private static GameServer m_server;
         //No point support IPv6 until KSP enables it on their windows builds.
-        private static TcpListener TCPServer;
         private static Queue<ClientObject> addClients;
         private static ReadOnlyCollection<ClientObject> clients;
         private static ConcurrentQueue<ClientObject> deleteClients;
         private static Dictionary<int, Subspace> subspaces;
         private static Dictionary<string, int> playerSubspace;
         private static string subspaceFile = Path.Combine(Server.universeDirectory, "subspace.txt");
-        private static string banlistFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "DMPPlayerBans.txt");
-        private static string ipBanlistFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "DMPIPBans.txt");
-        private static string publicKeyBanlistFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "DMPKeyBans.txt");
         private static string adminListFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "DMPAdmins.txt");
         private static string whitelistFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "DMPWhitelist.txt");
         private static Dictionary<string, List<string>> playerChatChannels;
@@ -47,6 +45,7 @@ namespace DarkMultiPlayerServer
         {
             try
             {
+                m_server = new GameServer(Settings.settingsStore.port, new Messages.ServerClientMessageFactory());
                 addClients = new Queue<ClientObject>();
                 clients = new List<ClientObject>().AsReadOnly();
                 deleteClients = new ConcurrentQueue<ClientObject>();
@@ -64,13 +63,11 @@ namespace DarkMultiPlayerServer
                 playerWatchScreenshot = new Dictionary<string, string>();
                 lockSystem = new LockSystem();
                 LoadSavedSubspace();
-                LoadBans();
-                LoadAdmins();
-                LoadWhitelist();
                 SetupTCPServer();
 
                 while (Server.serverRunning)
                 {
+                    m_server.Run();
                     //Add new clients
                     while (addClients.Count > 0)
                     {
@@ -156,7 +153,7 @@ namespace DarkMultiPlayerServer
                     }
                     Thread.Sleep(10);
                 }
-                ShutdownTCPServer();
+                /*ShutdownTCPServer();*/
             }
             catch (Exception e)
             {
@@ -250,21 +247,7 @@ namespace DarkMultiPlayerServer
             try
             {
                 IPAddress bindAddress = IPAddress.Parse(Settings.settingsStore.address);
-                TCPServer = new TcpListener(new IPEndPoint(bindAddress, Settings.settingsStore.port));
-                try
-                {
-                    if (System.Net.Sockets.Socket.OSSupportsIPv6)
-                    {
-                        //Windows defaults to v6 only, but this option does not exist in mono so it has to be in a try/catch block along with the casted int.
-                        TCPServer.Server.SetSocketOption(SocketOptionLevel.IPv6, (SocketOptionName)27, 0);
-                    }
-                }
-                catch
-                {
-                    //Don't care - On linux and mac this throws because it's already set, and on windows it just works.
-                }
-                TCPServer.Start(4);
-                TCPServer.BeginAcceptTcpClient(new AsyncCallback(NewClientCallback), null);
+
             }
             catch (Exception e)
             {
@@ -272,29 +255,6 @@ namespace DarkMultiPlayerServer
                 Server.serverRunning = false;
             }
             Server.serverStarting = false;
-        }
-
-        private static void ShutdownTCPServer()
-        {
-            TCPServer.Stop();
-        }
-
-        private static void NewClientCallback(IAsyncResult ar)
-        {
-            if (Server.serverRunning)
-            {
-                try
-                {
-                    TcpClient newClient = TCPServer.EndAcceptTcpClient(ar);
-                    SetupClient(newClient);
-                    DarkLog.Normal("New client connection from " + newClient.Client.RemoteEndPoint);
-                }
-                catch
-                {
-                    DarkLog.Normal("Error accepting client!");
-                }
-                TCPServer.BeginAcceptTcpClient(new AsyncCallback(NewClientCallback), null);
-            }
         }
 
         private static void SetupClient(TcpClient newClientConnection)
@@ -312,190 +272,6 @@ namespace DarkMultiPlayerServer
             DMPPluginHandler.FireOnClientConnect(newClientObject);
             SendHandshakeChallange(newClientObject);
             addClients.Enqueue(newClientObject);
-        }
-
-        private static void SaveAdmins()
-        {
-            DarkLog.Debug("Saving admin list");
-            try
-            {
-                if (File.Exists(adminListFile))
-                {
-                    File.SetAttributes(adminListFile, FileAttributes.Normal);
-                }
-
-                using (StreamWriter sw = new StreamWriter(adminListFile))
-                {
-                    foreach (string user in serverAdmins)
-                    {
-                        sw.WriteLine(user);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                DarkLog.Error("Error saving admin list!, Exception: " + e);
-            }
-        }
-
-        private static void SaveWhitelist()
-        {
-            DarkLog.Debug("Saving whitelist");
-            try
-            {
-                if (File.Exists(whitelistFile))
-                {
-                    File.SetAttributes(whitelistFile, FileAttributes.Normal);
-                }
-
-                using (StreamWriter sw = new StreamWriter(whitelistFile))
-                {
-                    foreach (string user in serverWhitelist)
-                    {
-                        sw.WriteLine(user);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                DarkLog.Error("Error saving whitelist!, Exception: " + e);
-            }
-        }
-
-        private static void SaveBans()
-        {
-            DarkLog.Debug("Saving bans");
-            try
-            {
-                if (File.Exists(banlistFile))
-                {
-                    File.SetAttributes(banlistFile, FileAttributes.Normal);
-                }
-
-                using (StreamWriter sw = new StreamWriter(banlistFile))
-                {
-
-                    foreach (string name in bannedNames)
-                    {
-                        sw.WriteLine("{0}", name);
-                    }
-                }
-
-                using (StreamWriter sw = new StreamWriter(ipBanlistFile))
-                {
-                    foreach (IPAddress ip in bannedIPs)
-                    {
-                        sw.WriteLine("{0}", ip);
-                    }
-                }
-
-                using (StreamWriter sw = new StreamWriter(publicKeyBanlistFile))
-                {
-                    foreach (string publicKey in bannedPublicKeys)
-                    {
-                        sw.WriteLine("{0}", publicKey);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                DarkLog.Error("Error saving bans!, Exception: " + e);
-            }
-        }
-
-        private static void LoadAdmins()
-        {
-            DarkLog.Debug("Loading admin list");
-
-            serverAdmins.Clear();
-
-            if (File.Exists(adminListFile))
-            {
-                serverAdmins.AddRange(File.ReadAllLines(adminListFile));
-            }
-            else
-            {
-                SaveAdmins();
-            }
-        }
-
-        private static void LoadWhitelist()
-        {
-            DarkLog.Debug("Loading whitelist");
-
-            serverWhitelist.Clear();
-
-            if (File.Exists(whitelistFile))
-            {
-                serverWhitelist.AddRange(File.ReadAllLines(whitelistFile));
-            }
-            else
-            {
-                SaveWhitelist();
-            }
-        }
-
-        private static void LoadBans()
-        {
-            DarkLog.Debug("Loading bans");
-
-            bannedNames.Clear();
-            bannedIPs.Clear();
-            bannedPublicKeys.Clear();
-            banReasons.Clear();
-
-            if (File.Exists(banlistFile))
-            {
-                foreach (string line in File.ReadAllLines(banlistFile))
-                {
-                    if (!bannedNames.Contains(line))
-                    {
-                        bannedNames.Add(line);
-                    }
-                }
-            }
-            else
-            {
-                File.Create(banlistFile);
-            }
-
-            if (File.Exists(ipBanlistFile))
-            {
-                foreach (string line in File.ReadAllLines(ipBanlistFile))
-                {
-                    IPAddress banIPAddr = null;
-                    if (IPAddress.TryParse(line, out banIPAddr))
-                    {
-                        if (!bannedIPs.Contains(banIPAddr))
-                        {
-                            bannedIPs.Add(banIPAddr);
-                        }
-                    }
-                    else
-                    {
-                        DarkLog.Error("Error in IP ban list file, " + line + " is not an IP address");
-                    }
-                }
-            }
-            else
-            {
-                File.Create(ipBanlistFile);
-            }
-
-            if (File.Exists(publicKeyBanlistFile))
-            {
-                foreach (string bannedPublicKey in File.ReadAllLines(publicKeyBanlistFile))
-                {
-                    if (!bannedPublicKeys.Contains(bannedPublicKey))
-                    {
-                        bannedPublicKeys.Add(bannedPublicKey);
-                    }
-                }
-            }
-            else
-            {
-                File.Create(publicKeyBanlistFile);
-            }
         }
 
         private static int GetActiveClientCount()
@@ -3111,7 +2887,6 @@ namespace DarkMultiPlayerServer
                 DarkLog.Normal("Player '" + playerName + "' was banned from the server: " + reason);
                 bannedNames.Add(playerName);
                 banReasons.Add(reason);
-                SaveBans();
             }
 
         }
@@ -3144,7 +2919,6 @@ namespace DarkMultiPlayerServer
                 }
                 bannedIPs.Add(ipAddress);
                 banReasons.Add(reason);
-                SaveBans();
 
                 DarkLog.Normal("IP Address '" + ip + "' was banned from the server: " + reason);
             }
@@ -3177,9 +2951,8 @@ namespace DarkMultiPlayerServer
             {
                 SendConnectionEnd(player, "You were banned from the server!");
             }
-            bannedPublicKeys.Add(publicKey);
-            banReasons.Add(reason);
-            SaveBans();
+
+            //m_banList.BanKey(publicKey);
 
             DarkLog.Normal("Public key '" + publicKey + "' was banned from the server: " + reason);
 
@@ -3244,7 +3017,6 @@ namespace DarkMultiPlayerServer
                         {
                             DarkLog.Debug("Added '" + playerName + "' to admin list.");
                             serverAdmins.Add(playerName);
-                            SaveAdmins();
                             //Notify all players an admin has been added
                             ServerMessage newMessage = new ServerMessage();
                             newMessage.type = ServerMessageType.ADMIN_SYSTEM;
@@ -3272,7 +3044,6 @@ namespace DarkMultiPlayerServer
                     {
                         DarkLog.Normal("Removed '" + playerName + "' from the admin list.");
                         serverAdmins.Remove(playerName);
-                        SaveAdmins();
                         //Notify all players an admin has been removed
                         ServerMessage newMessage = new ServerMessage();
                         newMessage.type = ServerMessageType.ADMIN_SYSTEM;
@@ -3324,7 +3095,6 @@ namespace DarkMultiPlayerServer
                     {
                         DarkLog.Normal("Added '" + playerName + "' to whitelist.");
                         serverWhitelist.Add(playerName);
-                        SaveWhitelist();
                     }
                     else
                     {
@@ -3336,7 +3106,6 @@ namespace DarkMultiPlayerServer
                     {
                         DarkLog.Normal("Removed '" + playerName + "' from the whitelist.");
                         serverWhitelist.Remove(playerName);
-                        SaveWhitelist();
                     }
                     else
                     {
