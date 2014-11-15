@@ -25,7 +25,7 @@ namespace DarkMultiPlayer
             CreateDelegates();
         }
 
-        public static ConfigNodeSerializer fetch
+        public static ConfigNodeSerializer Instance
         {
             get
             {

@@ -34,7 +34,7 @@ namespace DarkMultiPlayer
         private string backupPublicKeyFile;
         private string backupPrivateKeyFile;
 
-        public static Settings fetch
+        public static Settings Instance
         {
             get
             {
@@ -142,14 +142,14 @@ namespace DarkMultiPlayer
                         blueColor = 1f;
                     }
                     playerColor = new Color(redColor, greenColor, blueColor, 1f);
-                    OptionsWindow.fetch.loadEventHandled = false;
+                    OptionsWindow.Instance.loadEventHandled = false;
                 }
                 catch
                 {
                     DarkLog.Debug("Adding player color to settings file");
                     saveXMLAfterLoad = true;
                     playerColor = PlayerColorWorker.GenerateRandomColor();
-                    OptionsWindow.fetch.loadEventHandled = false;
+                    OptionsWindow.Instance.loadEventHandled = false;
                 }
                 try
                 {

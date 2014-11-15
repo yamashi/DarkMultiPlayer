@@ -13,7 +13,7 @@ namespace DarkMultiPlayer
         private Subspace savedSubspace;
         private double lastLoadTime;
 
-        public static QuickSaveLoader fetch
+        public static QuickSaveLoader Instance
         {
             get
             {
@@ -34,7 +34,7 @@ namespace DarkMultiPlayer
                         tempVessel.Save(savedVessel);
                         savedSubspace = new Subspace();
                         savedSubspace.planetTime = Planetarium.GetUniversalTime();
-                        savedSubspace.serverClock = TimeSyncer.fetch.GetServerClock();
+                        savedSubspace.serverClock = TimeSyncer.Instance.GetServerClock();
                         savedSubspace.subspaceSpeed = 1f;
                         ScreenMessages.PostScreenMessage("Quicksaved!", 3f, ScreenMessageStyle.UPPER_CENTER);
                     }
@@ -61,21 +61,21 @@ namespace DarkMultiPlayer
                 if ((UnityEngine.Time.realtimeSinceStartup - lastLoadTime) > 5f)
                 {
                     lastLoadTime = UnityEngine.Time.realtimeSinceStartup;
-                    TimeSyncer.fetch.UnlockSubspace();
-                    long serverClock = TimeSyncer.fetch.GetServerClock();
-                    int newSubspace = TimeSyncer.fetch.LockNewSubspace(serverClock, savedSubspace.planetTime, savedSubspace.subspaceSpeed);
+                    TimeSyncer.Instance.UnlockSubspace();
+                    long serverClock = TimeSyncer.Instance.GetServerClock();
+                    int newSubspace = TimeSyncer.Instance.LockNewSubspace(serverClock, savedSubspace.planetTime, savedSubspace.subspaceSpeed);
                     using (MessageWriter mw = new MessageWriter())
                     {
                         mw.Write<int>((int)WarpMessageType.NEW_SUBSPACE);
-                        mw.Write<string>(Settings.fetch.playerName);
+                        mw.Write<string>(Settings.Instance.playerName);
                         mw.Write<int>(newSubspace);
                         mw.Write<long>(serverClock);
                         mw.Write<double>(savedSubspace.planetTime);
                         mw.Write<float>(savedSubspace.subspaceSpeed);
-                        NetworkWorker.fetch.SendWarpMessage(mw.GetMessageBytes());
+                        NetworkWorker.Instance.SendWarpMessage(mw.GetMessageBytes());
                     }
-                    TimeSyncer.fetch.LockSubspace(newSubspace);
-                    VesselWorker.fetch.LoadVessel(savedVessel);
+                    TimeSyncer.Instance.LockSubspace(newSubspace);
+                    VesselWorker.Instance.LoadVessel(savedVessel);
                     ScreenMessages.PostScreenMessage("Quickloaded!", 3f, ScreenMessageStyle.UPPER_CENTER);
                 }
             }

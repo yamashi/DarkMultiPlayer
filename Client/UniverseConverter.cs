@@ -38,7 +38,7 @@ namespace DarkMultiPlayer
             Directory.CreateDirectory(vesselFolder);
             string scenarioFolder = Path.Combine(universeFolder, "Scenarios");
             Directory.CreateDirectory(scenarioFolder);
-            string playerScenarioFolder = Path.Combine(scenarioFolder, Settings.fetch.playerName);
+            string playerScenarioFolder = Path.Combine(scenarioFolder, Settings.Instance.playerName);
             Directory.CreateDirectory(playerScenarioFolder);
             string kerbalFolder = Path.Combine(universeFolder, "Kerbals");
             Directory.CreateDirectory(kerbalFolder);

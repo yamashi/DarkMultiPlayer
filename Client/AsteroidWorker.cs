@@ -19,7 +19,7 @@ namespace DarkMultiPlayer
         private Dictionary<string,string> serverAsteroidTrackStatus = new Dictionary<string,string>();
         private object serverAsteroidListLock = new object();
 
-        public static AsteroidWorker fetch
+        public static AsteroidWorker Instance
         {
             get
             {
@@ -55,13 +55,13 @@ namespace DarkMultiPlayer
                     {
                         lastAsteroidCheck = UnityEngine.Time.realtimeSinceStartup;
                         //Try to acquire the asteroid-spawning lock if nobody else has it.
-                        if (!LockSystem.fetch.LockExists("asteroid-spawning"))
+                        if (!LockSystem.Instance.LockExists("asteroid-spawning"))
                         {
-                            LockSystem.fetch.AcquireLock("asteroid-spawning", false);
+                            LockSystem.Instance.AcquireLock("asteroid-spawning", false);
                         }
 
                         //We have the spawn lock, lets do stuff.
-                        if (LockSystem.fetch.LockIsOurs("asteroid-spawning"))
+                        if (LockSystem.Instance.LockIsOurs("asteroid-spawning"))
                         {
                             if ((HighLogic.CurrentGame.flightState.protoVessels != null) && (FlightGlobals.fetch.vessels != null))
                             {
@@ -94,7 +94,7 @@ namespace DarkMultiPlayer
                                         ProtoVessel pv = asteroid.BackupVessel();
                                         DarkLog.Debug("Sending changed asteroid, new state: " + asteroid.DiscoveryInfo.trackingStatus.Value + "!");
                                         serverAsteroidTrackStatus[asteroid.id.ToString()] = asteroid.DiscoveryInfo.trackingStatus.Value;
-                                        NetworkWorker.fetch.SendVesselProtoMessage(pv, false, false);
+                                        NetworkWorker.Instance.SendVesselProtoMessage(pv, false, false);
                                     }
                                 }
                             }
@@ -112,7 +112,7 @@ namespace DarkMultiPlayer
                 {
                     lock (serverAsteroidListLock)
                     {
-                        if (LockSystem.fetch.LockIsOurs("asteroid-spawning"))
+                        if (LockSystem.Instance.LockIsOurs("asteroid-spawning"))
                         {
                             if (!serverAsteroids.Contains(checkVessel.id.ToString()))
                             {
@@ -120,8 +120,8 @@ namespace DarkMultiPlayer
                                 {
                                     DarkLog.Debug("Spawned in new server asteroid!");
                                     serverAsteroids.Add(checkVessel.id.ToString());
-                                    VesselWorker.fetch.RegisterServerVessel(checkVessel.id.ToString());
-                                    NetworkWorker.fetch.SendVesselProtoMessage(checkVessel.protoVessel, false, false);
+                                    VesselWorker.Instance.RegisterServerVessel(checkVessel.id.ToString());
+                                    NetworkWorker.Instance.SendVesselProtoMessage(checkVessel.protoVessel, false, false);
                                 }
                                 else
                                 {

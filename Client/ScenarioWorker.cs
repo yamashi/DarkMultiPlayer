@@ -21,7 +21,7 @@ namespace DarkMultiPlayer
 
         private AddCrewMemberToRosterDelegate AddCrewMemberToRoster;
 
-        public static ScenarioWorker fetch
+        public static ScenarioWorker Instance
         {
             get
             {
@@ -50,7 +50,7 @@ namespace DarkMultiPlayer
             }
 
             //Blacklisted modes for sandbox
-            if (Client.fetch.gameMode == GameMode.SANDBOX)
+            if (Client.Instance.gameMode == GameMode.SANDBOX)
             {
                 switch (scenarioName)
                 {
@@ -61,7 +61,7 @@ namespace DarkMultiPlayer
             }
 
             //Blacklisted modules for science/sandbox
-            if (Client.fetch.gameMode == GameMode.SANDBOX || Client.fetch.gameMode == GameMode.SCIENCE)
+            if (Client.Instance.gameMode == GameMode.SANDBOX || Client.Instance.gameMode == GameMode.SCIENCE)
             {
                 switch (scenarioName)
                 {
@@ -89,7 +89,7 @@ namespace DarkMultiPlayer
                 }
                 ConfigNode scenarioNode = new ConfigNode();
                 sm.Save(scenarioNode);
-                byte[] scenarioBytes = ConfigNodeSerializer.fetch.Serialize(scenarioNode);
+                byte[] scenarioBytes = ConfigNodeSerializer.Instance.Serialize(scenarioNode);
                 string scenarioHash = Common.CalculateSHA256Hash(scenarioBytes);
                 if (checkData.ContainsKey(scenarioType) ? (checkData[scenarioType] == scenarioHash) : false)
                 {
@@ -109,7 +109,7 @@ namespace DarkMultiPlayer
 
             if (scenarioName.Count > 0)
             {
-                NetworkWorker.fetch.SendScenarioModuleData(scenarioName.ToArray(), scenarioData.ToArray());
+                NetworkWorker.Instance.SendScenarioModuleData(scenarioName.ToArray(), scenarioData.ToArray());
             }
         }
 
@@ -136,7 +136,7 @@ namespace DarkMultiPlayer
                     }
                     else
                     {
-                        DarkLog.Debug("Skipping " + psm.moduleName + " scenario data in " + Client.fetch.gameMode + " mode");
+                        DarkLog.Debug("Skipping " + psm.moduleName + " scenario data in " + Client.Instance.gameMode + " mode");
                     }
                 }
             }
@@ -230,7 +230,7 @@ namespace DarkMultiPlayer
                             pcm.name = kerbalName;
                             AddCrewMemberToRoster(pcm);
                             //Also send it off to the server
-                            NetworkWorker.fetch.SendKerbalProtoMessage(pcm);
+                            NetworkWorker.Instance.SendKerbalProtoMessage(pcm);
                         }
                     }
                 }
@@ -272,7 +272,7 @@ namespace DarkMultiPlayer
         {
             if (!IsScenarioModuleAllowed(entry.scenarioName))
             {
-                DarkLog.Debug("Skipped '" + entry.scenarioName + "' scenario data  in " + Client.fetch.gameMode + " mode");
+                DarkLog.Debug("Skipped '" + entry.scenarioName + "' scenario data  in " + Client.Instance.gameMode + " mode");
                 return;
             }
 

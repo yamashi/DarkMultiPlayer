@@ -75,7 +75,7 @@ namespace DarkMultiPlayer
             requestedRate = 1f;
         }
 
-        public static TimeSyncer fetch
+        public static TimeSyncer Instance
         {
             get
             {
@@ -92,7 +92,7 @@ namespace DarkMultiPlayer
                     if ((UnityEngine.Time.realtimeSinceStartup - lastSyncTime) > SYNC_TIME_INTERVAL)
                     {
                         lastSyncTime = UnityEngine.Time.realtimeSinceStartup;
-                        NetworkWorker.fetch.SendTimeSync();
+                        NetworkWorker.Instance.SendTimeSync();
                     }
 
                     if (!locked && currentSubspace != -1)
@@ -330,9 +330,9 @@ namespace DarkMultiPlayer
                 using (MessageWriter mw = new MessageWriter())
                 {
                     mw.Write<int>((int)WarpMessageType.CHANGE_SUBSPACE);
-                    mw.Write<string>(Settings.fetch.playerName);
+                    mw.Write<string>(Settings.Instance.playerName);
                     mw.Write<int>(subspaceID);
-                    NetworkWorker.fetch.SendWarpMessage(mw.GetMessageBytes());
+                    NetworkWorker.Instance.SendWarpMessage(mw.GetMessageBytes());
                 }
             }
             currentSubspace = subspaceID;
@@ -346,9 +346,9 @@ namespace DarkMultiPlayer
             using (MessageWriter mw = new MessageWriter())
             {
                 mw.Write<int>((int)WarpMessageType.CHANGE_SUBSPACE);
-                mw.Write<string>(Settings.fetch.playerName);
+                mw.Write<string>(Settings.Instance.playerName);
                 mw.Write<int>(currentSubspace);
-                NetworkWorker.fetch.SendWarpMessage(mw.GetMessageBytes());
+                NetworkWorker.Instance.SendWarpMessage(mw.GetMessageBytes());
             }
         }
 
@@ -483,7 +483,7 @@ namespace DarkMultiPlayer
             if (!synced)
             {
                 lastSyncTime = UnityEngine.Time.realtimeSinceStartup;
-                NetworkWorker.fetch.SendTimeSync();
+                NetworkWorker.Instance.SendTimeSync();
             }
         }
 

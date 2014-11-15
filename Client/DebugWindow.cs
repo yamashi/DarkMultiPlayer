@@ -39,7 +39,7 @@ namespace DarkMultiPlayer
         private const float WINDOW_WIDTH = 350;
         private const float DISPLAY_UPDATE_INTERVAL = .2f;
 
-        public static DebugWindow fetch
+        public static DebugWindow Instance
         {
             get
             {
@@ -170,33 +170,33 @@ namespace DarkMultiPlayer
 
                     //NTP text
                     ntpText = "Warp rate: " + Math.Round(Time.timeScale, 3) + "x.\n";
-                    ntpText += "Current subspace: " + TimeSyncer.fetch.currentSubspace + ".\n";
-                    ntpText += "Current subspace rate: " + Math.Round(TimeSyncer.fetch.GetSubspace(TimeSyncer.fetch.currentSubspace).subspaceSpeed, 3) + "x.\n";
-                    ntpText += "Current Error: " + Math.Round((TimeSyncer.fetch.GetCurrentError() * 1000), 0) + " ms.\n";
+                    ntpText += "Current subspace: " + TimeSyncer.Instance.currentSubspace + ".\n";
+                    ntpText += "Current subspace rate: " + Math.Round(TimeSyncer.Instance.GetSubspace(TimeSyncer.Instance.currentSubspace).subspaceSpeed, 3) + "x.\n";
+                    ntpText += "Current Error: " + Math.Round((TimeSyncer.Instance.GetCurrentError() * 1000), 0) + " ms.\n";
                     ntpText += "Current universe time: " + Math.Round(Planetarium.GetUniversalTime(), 3) + " UT\n";
-                    ntpText += "Network latency: " + Math.Round((TimeSyncer.fetch.networkLatencyAverage / 10000f), 3) + " ms\n";
-                    ntpText += "Server clock difference: " + Math.Round((TimeSyncer.fetch.clockOffsetAverage / 10000f), 3) + " ms\n";
-                    ntpText += "Server lag: " + Math.Round((TimeSyncer.fetch.serverLag / 10000f), 3) + " ms\n";
+                    ntpText += "Network latency: " + Math.Round((TimeSyncer.Instance.networkLatencyAverage / 10000f), 3) + " ms\n";
+                    ntpText += "Server clock difference: " + Math.Round((TimeSyncer.Instance.clockOffsetAverage / 10000f), 3) + " ms\n";
+                    ntpText += "Server lag: " + Math.Round((TimeSyncer.Instance.serverLag / 10000f), 3) + " ms\n";
 
                     //Connection queue text
-                    connectionText = "Last send time: " + NetworkWorker.fetch.GetStatistics("LastSendTime") + "ms.\n";
-                    connectionText += "Last receive time: " + NetworkWorker.fetch.GetStatistics("LastReceiveTime") + "ms.\n";
-                    connectionText += "Queued outgoing messages (High): " + NetworkWorker.fetch.GetStatistics("HighPriorityQueueLength") + ".\n";
-                    connectionText += "Queued outgoing messages (Split): " + NetworkWorker.fetch.GetStatistics("SplitPriorityQueueLength") + ".\n";
-                    connectionText += "Queued outgoing messages (Low): " + NetworkWorker.fetch.GetStatistics("LowPriorityQueueLength") + ".\n";
-                    connectionText += "Queued out bytes: " + NetworkWorker.fetch.GetStatistics("QueuedOutBytes") + ".\n";
-                    connectionText += "Sent bytes: " + NetworkWorker.fetch.GetStatistics("SentBytes") + ".\n";
-                    connectionText += "Received bytes: " + NetworkWorker.fetch.GetStatistics("ReceivedBytes") + ".\n";
-                    connectionText += "Stored future updates: " + VesselWorker.fetch.GetStatistics("StoredFutureUpdates") + "\n";
-                    connectionText += "Stored future proto updates: " + VesselWorker.fetch.GetStatistics("StoredFutureProtoUpdates") + ".\n";
+                    connectionText = "Last send time: " + NetworkWorker.Instance.GetStatistics("LastSendTime") + "ms.\n";
+                    connectionText += "Last receive time: " + NetworkWorker.Instance.GetStatistics("LastReceiveTime") + "ms.\n";
+                    connectionText += "Queued outgoing messages (High): " + NetworkWorker.Instance.GetStatistics("HighPriorityQueueLength") + ".\n";
+                    connectionText += "Queued outgoing messages (Split): " + NetworkWorker.Instance.GetStatistics("SplitPriorityQueueLength") + ".\n";
+                    connectionText += "Queued outgoing messages (Low): " + NetworkWorker.Instance.GetStatistics("LowPriorityQueueLength") + ".\n";
+                    connectionText += "Queued out bytes: " + NetworkWorker.Instance.GetStatistics("QueuedOutBytes") + ".\n";
+                    connectionText += "Sent bytes: " + NetworkWorker.Instance.GetStatistics("SentBytes") + ".\n";
+                    connectionText += "Received bytes: " + NetworkWorker.Instance.GetStatistics("ReceivedBytes") + ".\n";
+                    connectionText += "Stored future updates: " + VesselWorker.Instance.GetStatistics("StoredFutureUpdates") + "\n";
+                    connectionText += "Stored future proto updates: " + VesselWorker.Instance.GetStatistics("StoredFutureProtoUpdates") + ".\n";
 
                     //Dynamic tick text
-                    dynamicTickText = "Current tick rate: " + DynamicTickWorker.fetch.sendTickRate + "hz.\n";
-                    dynamicTickText += "Current max secondry vessels: " + DynamicTickWorker.fetch.maxSecondryVesselsPerTick + ".\n";
+                    dynamicTickText = "Current tick rate: " + DynamicTickWorker.Instance.sendTickRate + "hz.\n";
+                    dynamicTickText += "Current max secondry vessels: " + DynamicTickWorker.Instance.maxSecondryVesselsPerTick + ".\n";
 
                     //Requested rates text
-                    requestedRateText = Settings.fetch.playerName + ": " + Math.Round(TimeSyncer.fetch.requestedRate, 3) + "x.\n";
-                    foreach (KeyValuePair<string, float> playerEntry in WarpWorker.fetch.clientSkewList)
+                    requestedRateText = Settings.Instance.playerName + ": " + Math.Round(TimeSyncer.Instance.requestedRate, 3) + "x.\n";
+                    foreach (KeyValuePair<string, float> playerEntry in WarpWorker.Instance.clientSkewList)
                     {
                         requestedRateText += playerEntry.Key + ": " + Math.Round(playerEntry.Value, 3) + "x.\n";
                     }
@@ -210,7 +210,7 @@ namespace DarkMultiPlayer
 
         private void CheckWindowLock()
         {
-            if (!Client.fetch.gameRunning)
+            if (!Client.Instance.gameRunning)
             {
                 RemoveWindowLock();
                 return;

@@ -23,14 +23,14 @@ namespace DarkMultiPlayer
                 if (!privateWorkerEnabled && value)
                 {
                     GameEvents.onVesselCreate.Add(this.SetVesselColor);
-                    LockSystem.fetch.RegisterAcquireHook(this.OnLockAcquire);
-                    LockSystem.fetch.RegisterReleaseHook(this.OnLockRelease);
+                    LockSystem.Instance.RegisterAcquireHook(this.OnLockAcquire);
+                    LockSystem.Instance.RegisterReleaseHook(this.OnLockRelease);
                 }
                 if (privateWorkerEnabled && !value)
                 {
                     GameEvents.onVesselCreate.Remove(this.SetVesselColor);
-                    LockSystem.fetch.UnregisterAcquireHook(this.OnLockAcquire);
-                    LockSystem.fetch.UnregisterReleaseHook(this.OnLockRelease);
+                    LockSystem.Instance.UnregisterAcquireHook(this.OnLockAcquire);
+                    LockSystem.Instance.UnregisterReleaseHook(this.OnLockRelease);
                 }
                 privateWorkerEnabled = value;
             }
@@ -42,7 +42,7 @@ namespace DarkMultiPlayer
         //Can't declare const - But no touchy.
         public readonly Color DEFAULT_COLOR = Color.grey;
 
-        public static PlayerColorWorker fetch
+        public static PlayerColorWorker Instance
         {
             get
             {
@@ -54,9 +54,9 @@ namespace DarkMultiPlayer
         {
             if (workerEnabled)
             {
-                if (LockSystem.fetch.LockExists("control-" + colorVessel.id.ToString()) && !LockSystem.fetch.LockIsOurs("control-" + colorVessel.id.ToString()))
+                if (LockSystem.Instance.LockExists("control-" + colorVessel.id.ToString()) && !LockSystem.Instance.LockIsOurs("control-" + colorVessel.id.ToString()))
                 {
-                    string vesselOwner = LockSystem.fetch.LockOwner("control-" + colorVessel.id.ToString());
+                    string vesselOwner = LockSystem.Instance.LockOwner("control-" + colorVessel.id.ToString());
                     DarkLog.Debug("Vessel " + colorVessel.id.ToString() + " owner is " + vesselOwner);
                     colorVessel.orbitDriver.orbitColor = GetPlayerColor(vesselOwner);
                 }
@@ -110,9 +110,9 @@ namespace DarkMultiPlayer
         {
             lock (playerColorLock)
             {
-                if (playerName == Settings.fetch.playerName)
+                if (playerName == Settings.Instance.playerName)
                 {
-                    return Settings.fetch.playerColor;
+                    return Settings.Instance.playerColor;
                 }
                 if (playerColors.ContainsKey(playerName))
                 {
@@ -141,7 +141,7 @@ namespace DarkMultiPlayer
                                     string playerName = mr.Read<string>();
                                     Color playerColor = ConvertFloatArrayToColor(mr.Read<float[]>());
                                     playerColors.Add(playerName, playerColor);
-                                    PlayerStatusWindow.fetch.colorEventHandled = false;
+                                    PlayerStatusWindow.Instance.colorEventHandled = false;
                                 }
                             }
                         }
@@ -155,7 +155,7 @@ namespace DarkMultiPlayer
                                 DarkLog.Debug("Color message, name: " + playerName + " , color: " + playerColor.ToString());
                                 playerColors[playerName] = playerColor;
                                 UpdateAllVesselColors();
-                                PlayerStatusWindow.fetch.colorEventHandled = false;
+                                PlayerStatusWindow.Instance.colorEventHandled = false;
                             }
                         }
                         break;
@@ -168,9 +168,9 @@ namespace DarkMultiPlayer
             using (MessageWriter mw = new MessageWriter())
             {
                 mw.Write<int>((int)PlayerColorMessageType.SET);
-                mw.Write<string>(Settings.fetch.playerName);
-                mw.Write<float[]>(ConvertColorToFloatArray(Settings.fetch.playerColor));
-                NetworkWorker.fetch.SendPlayerColorMessage(mw.GetMessageBytes());
+                mw.Write<string>(Settings.Instance.playerName);
+                mw.Write<float[]>(ConvertColorToFloatArray(Settings.Instance.playerColor));
+                NetworkWorker.Instance.SendPlayerColorMessage(mw.GetMessageBytes());
             }
         }
         //Helpers

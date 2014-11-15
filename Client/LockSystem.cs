@@ -16,7 +16,7 @@ namespace DarkMultiPlayer
         private Dictionary<string, double> lastAcquireTime = new Dictionary<string, double>();
         private object lockObject = new object();
 
-        public static LockSystem fetch
+        public static LockSystem Instance
         {
             get
             {
@@ -40,10 +40,10 @@ namespace DarkMultiPlayer
                 using (MessageWriter mw = new MessageWriter())
                 {
                     mw.Write<int>((int)LockMessageType.ACQUIRE);
-                    mw.Write<string>(Settings.fetch.playerName);
+                    mw.Write<string>(Settings.Instance.playerName);
                     mw.Write<string>(lockName);
                     mw.Write<bool>(force);
-                    NetworkWorker.fetch.SendLockSystemMessage(mw.GetMessageBytes());
+                    NetworkWorker.Instance.SendLockSystemMessage(mw.GetMessageBytes());
                 }
             }
         }
@@ -55,9 +55,9 @@ namespace DarkMultiPlayer
                 using (MessageWriter mw = new MessageWriter())
                 {
                     mw.Write<int>((int)LockMessageType.RELEASE);
-                    mw.Write<string>(Settings.fetch.playerName);
+                    mw.Write<string>(Settings.Instance.playerName);
                     mw.Write<string>(lockName);
-                    NetworkWorker.fetch.SendLockSystemMessage(mw.GetMessageBytes());
+                    NetworkWorker.Instance.SendLockSystemMessage(mw.GetMessageBytes());
                 }
                 if (LockIsOurs(lockName))
                 {
@@ -101,7 +101,7 @@ namespace DarkMultiPlayer
                 }
                 foreach (string removeValue in removeList)
                 {
-                    if (playerName == Settings.fetch.playerName)
+                    if (playerName == Settings.Instance.playerName)
                     {
                         DarkLog.Debug("Releasing lock " + removeValue);
                         ReleaseLock(removeValue);
@@ -226,7 +226,7 @@ namespace DarkMultiPlayer
             {
                 if (serverLocks.ContainsKey(lockName))
                 {
-                    if (serverLocks[lockName] == Settings.fetch.playerName)
+                    if (serverLocks[lockName] == Settings.Instance.playerName)
                     {
                         return true;
                     }

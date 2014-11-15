@@ -23,7 +23,7 @@ namespace DarkMultiPlayer
             get;
         }
 
-        public static ModWorker fetch
+        public static ModWorker Instance
         {
             get
             {
@@ -378,7 +378,7 @@ namespace DarkMultiPlayer
             if (!modCheckOk)
             {
                 failText = sb.ToString();
-                ModWindow.fetch.display = true;
+                ModWindow.Instance.display = true;
                 return false;
             }
             allowedParts = parsePartsList;

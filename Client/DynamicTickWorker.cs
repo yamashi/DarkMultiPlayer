@@ -20,7 +20,7 @@ namespace DarkMultiPlayer
         //1000KB
         private const int MASTER_SECONDARY_VESSELS_SCALING = 200 * 1024;
 
-        public static DynamicTickWorker fetch
+        public static DynamicTickWorker Instance
         {
             get
             {
@@ -54,7 +54,7 @@ namespace DarkMultiPlayer
 
         private void CalculateRates()
         {
-            long currentQueuedBytes = NetworkWorker.fetch.GetStatistics("QueuedOutBytes");
+            long currentQueuedBytes = NetworkWorker.Instance.GetStatistics("QueuedOutBytes");
 
             //Tick Rate math - Clamp to minimum value.
             long newTickRate = MASTER_MAX_TICKS_PER_SECOND - (currentQueuedBytes / (MASTER_TICK_SCALING / (MASTER_MAX_TICKS_PER_SECOND - MASTER_MIN_TICKS_PER_SECOND)));

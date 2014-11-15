@@ -55,7 +55,7 @@ namespace DarkMultiPlayer
         private const float SCREENSHOT_MESSAGE_CHECK_INTERVAL = .2f;
         private const float MIN_SCREENSHOT_SEND_INTERVAL = 3f;
 
-        public static ScreenshotWorker fetch
+        public static ScreenshotWorker Instance
         {
             get
             {
@@ -105,7 +105,7 @@ namespace DarkMultiPlayer
                             highlightedPlayers.Add(notifyPlayer);
                         }
                     }
-                    ChatWorker.fetch.QueueChannelMessage("Server", "", notifyPlayer + " shared screenshot");
+                    ChatWorker.Instance.QueueChannelMessage("Server", "", notifyPlayer + " shared screenshot");
                 }
 
                 //Update highlights
@@ -163,7 +163,7 @@ namespace DarkMultiPlayer
                     WatchPlayer(selectedPlayer);
                 }
 
-                if (Input.GetKey(Settings.fetch.screenshotKey))
+                if (Input.GetKey(Settings.Instance.screenshotKey))
                 {
                     uploadEventHandled = false;
                 }
@@ -258,15 +258,15 @@ namespace DarkMultiPlayer
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
             scrollPos = GUILayout.BeginScrollView(scrollPos, scrollStyle, fixedButtonSizeOption);
-            DrawPlayerButton(Settings.fetch.playerName);
-            foreach (PlayerStatus player in PlayerStatusWorker.fetch.playerStatusList)
+            DrawPlayerButton(Settings.Instance.playerName);
+            foreach (PlayerStatus player in PlayerStatusWorker.Instance.playerStatusList)
             {
                 DrawPlayerButton(player.playerName);
             }
             GUILayout.EndScrollView();
             GUILayout.FlexibleSpace();
             GUI.enabled = ((UnityEngine.Time.realtimeSinceStartup - lastScreenshotSend) > MIN_SCREENSHOT_SEND_INTERVAL);
-            if (GUILayout.Button("Upload (" + Settings.fetch.screenshotKey.ToString() + ")", buttonStyle))
+            if (GUILayout.Button("Upload (" + Settings.Instance.screenshotKey.ToString() + ")", buttonStyle))
             {
                 uploadEventHandled = false;
             }
@@ -284,7 +284,7 @@ namespace DarkMultiPlayer
 
         private void CheckWindowLock()
         {
-            if (!Client.fetch.gameRunning)
+            if (!Client.Instance.gameRunning)
             {
                 RemoveWindowLock();
                 return;
@@ -352,9 +352,9 @@ namespace DarkMultiPlayer
             using (MessageWriter mw = new MessageWriter())
             {
                 mw.Write<int>((int)ScreenshotMessageType.WATCH);
-                mw.Write<string>(Settings.fetch.playerName);
+                mw.Write<string>(Settings.Instance.playerName);
                 mw.Write<string>(playerName);
-                NetworkWorker.fetch.SendScreenshotMessage(mw.GetMessageBytes());
+                NetworkWorker.Instance.SendScreenshotMessage(mw.GetMessageBytes());
             }
         }
         //Called from main due to WaitForEndOfFrame timing.
@@ -363,9 +363,9 @@ namespace DarkMultiPlayer
             using (MessageWriter mw = new MessageWriter())
             {
                 mw.Write<int>((int)ScreenshotMessageType.SCREENSHOT);
-                mw.Write<string>(Settings.fetch.playerName);
+                mw.Write<string>(Settings.Instance.playerName);
                 mw.Write<byte[]>(GetScreenshotBytes());
-                NetworkWorker.fetch.SendScreenshotMessage(mw.GetMessageBytes());
+                NetworkWorker.Instance.SendScreenshotMessage(mw.GetMessageBytes());
             }
         }
         //Adapted from KMP.
@@ -396,7 +396,7 @@ namespace DarkMultiPlayer
             ourTexture.Apply();
             ResizeTextureIfNeeded(ref ourTexture);
             //Save our texture in memory.
-            screenshots[Settings.fetch.playerName] = ourTexture;
+            screenshots[Settings.Instance.playerName] = ourTexture;
 
             RenderTexture.active = null;
             return resizedTexture.EncodeToPNG();

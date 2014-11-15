@@ -80,7 +80,7 @@ namespace DarkMultiPlayer
         /// <returns><c>true</c> if the current player is admin; otherwise, <c>false</c>.</returns>
         public bool IsAdmin()
         {
-            return IsAdmin(Settings.fetch.playerName);
+            return IsAdmin(Settings.Instance.playerName);
         }
 
         /// <summary>

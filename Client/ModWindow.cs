@@ -30,7 +30,7 @@ namespace DarkMultiPlayer
             }
         }
 
-        public static ModWindow fetch
+        public static ModWindow Instance
         {
             get
             {
@@ -82,7 +82,7 @@ namespace DarkMultiPlayer
             GUI.DragWindow(moveRect);
             GUILayout.Label("Failed mod validation", labelStyle);
             scrollPos = GUILayout.BeginScrollView(scrollPos, scrollStyle);
-            GUILayout.Label(ModWorker.fetch.failText, labelStyle);
+            GUILayout.Label(ModWorker.Instance.failText, labelStyle);
             GUILayout.EndScrollView();
             if (GUILayout.Button("Close", buttonStyle))
             {

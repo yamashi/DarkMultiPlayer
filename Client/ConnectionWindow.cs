@@ -56,7 +56,7 @@ namespace DarkMultiPlayer
             }
         }
 
-        public static ConnectionWindow fetch
+        public static ConnectionWindow Instance
         {
             get
             {
@@ -66,7 +66,7 @@ namespace DarkMultiPlayer
 
         private void Update()
         {
-            status = Client.fetch.status;
+            status = Client.Instance.status;
             selectedSafe = selected;
             addingServerSafe = addingServer;
             display = (HighLogic.LoadedScene == GameScenes.MAINMENU);
@@ -110,13 +110,13 @@ namespace DarkMultiPlayer
             GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
             GUILayout.Label("Player name:");
-            string oldPlayerName = Settings.fetch.playerName;
-            Settings.fetch.playerName = GUILayout.TextArea(Settings.fetch.playerName, textAreaStyle);
-            if (Settings.fetch.playerName.Length > 32)
+            string oldPlayerName = Settings.Instance.playerName;
+            Settings.Instance.playerName = GUILayout.TextArea(Settings.Instance.playerName, textAreaStyle);
+            if (Settings.Instance.playerName.Length > 32)
             {
-                Settings.fetch.playerName = Settings.fetch.playerName.Substring(0, 32);
+                Settings.Instance.playerName = Settings.Instance.playerName.Substring(0, 32);
             }
-            if (oldPlayerName != Settings.fetch.playerName)
+            if (oldPlayerName != Settings.Instance.playerName)
             {
                 renameEventHandled = false;
             }
@@ -130,14 +130,14 @@ namespace DarkMultiPlayer
                 if (selected != -1)
                 {
                     //Load the existing server settings
-                    serverName = Settings.fetch.servers[selected].name;
-                    serverAddress = Settings.fetch.servers[selected].address;
-                    serverPort = Settings.fetch.servers[selected].port.ToString();
+                    serverName = Settings.Instance.servers[selected].name;
+                    serverAddress = Settings.Instance.servers[selected].address;
+                    serverPort = Settings.Instance.servers[selected].port.ToString();
                 }
             }
 
             //Draw connect button
-            if (NetworkWorker.fetch.state == DarkMultiPlayerCommon.ClientState.DISCONNECTED)
+            if (NetworkWorker.Instance.state == DarkMultiPlayerCommon.ClientState.DISCONNECTED)
             {
                 GUI.enabled = (selectedSafe != -1);
                 if (GUILayout.Button("Connect", buttonStyle))
@@ -161,7 +161,7 @@ namespace DarkMultiPlayer
                 }
             }
             GUI.enabled = true;
-            OptionsWindow.fetch.display = GUILayout.Toggle(OptionsWindow.fetch.display, "Options", buttonStyle);
+            OptionsWindow.Instance.display = GUILayout.Toggle(OptionsWindow.Instance.display, "Options", buttonStyle);
             GUILayout.EndHorizontal();
             if (addingServerSafe)
             {
@@ -200,14 +200,14 @@ namespace DarkMultiPlayer
             }
 
             GUILayout.Label("Servers:");
-            if (Settings.fetch.servers.Count == 0)
+            if (Settings.Instance.servers.Count == 0)
             {
                 GUILayout.Label("(None - Add a server first)");
             }
 
-            for (int serverPos = 0; serverPos < Settings.fetch.servers.Count; serverPos++)
+            for (int serverPos = 0; serverPos < Settings.Instance.servers.Count; serverPos++)
             {
-                bool thisSelected = GUILayout.Toggle(serverPos == selectedSafe, Settings.fetch.servers[serverPos].name, buttonStyle);
+                bool thisSelected = GUILayout.Toggle(serverPos == selectedSafe, Settings.Instance.servers[serverPos].name, buttonStyle);
                 if (selected == selectedSafe)
                 {
                     if (thisSelected)

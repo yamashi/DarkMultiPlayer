@@ -15,7 +15,7 @@ namespace DarkMultiPlayer
         private bool display;
         private GUILayoutOption[] layoutOptions;
 
-        public static DisclaimerWindow fetch
+        public static DisclaimerWindow Instance
         {
             get
             {
@@ -70,9 +70,9 @@ namespace DarkMultiPlayer
             {
                 DarkLog.Debug("User accepted disclaimer - Enabling DarkMultiPlayer");
                 display = false;
-                Settings.fetch.disclaimerAccepted = 1;
-                Client.fetch.modDisabled = false;
-                Settings.fetch.SaveSettings();
+                Settings.Instance.disclaimerAccepted = 1;
+                Client.Instance.modDisabled = false;
+                Settings.Instance.SaveSettings();
             }
             if (GUILayout.Button("I decline - Disable DarkMultiPlayer"))
             {

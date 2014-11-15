@@ -21,11 +21,11 @@ namespace DarkMultiPlayer
         public PlayerStatusWorker()
         {
             myPlayerStatus = new PlayerStatus();
-            myPlayerStatus.playerName = Settings.fetch.playerName;
+            myPlayerStatus.playerName = Settings.Instance.playerName;
             myPlayerStatus.statusText = "Syncing";
         }
 
-        public static PlayerStatusWorker fetch
+        public static PlayerStatusWorker Instance
         {
             get
             {
@@ -47,7 +47,7 @@ namespace DarkMultiPlayer
                         //Send vessel+status update
                         if (FlightGlobals.ActiveVessel != null)
                         {
-                            if (!VesselWorker.fetch.isSpectating)
+                            if (!VesselWorker.Instance.isSpectating)
                             {
                                 myPlayerStatus.vesselText = FlightGlobals.ActiveVessel.vesselName;
                                 string bodyName = FlightGlobals.ActiveVessel.mainBody.bodyName;
@@ -67,7 +67,7 @@ namespace DarkMultiPlayer
                                         }
                                         break;
                                     case (Vessel.Situations.FLYING):
-                                        if (!VesselWorker.fetch.isInSafetyBubble(FlightGlobals.fetch.activeVessel.GetWorldPos3D(), FlightGlobals.fetch.activeVessel.mainBody))
+                                        if (!VesselWorker.Instance.isInSafetyBubble(FlightGlobals.fetch.activeVessel.GetWorldPos3D(), FlightGlobals.fetch.activeVessel.mainBody))
                                         {
                                             myPlayerStatus.statusText = "Flying above " + bodyName;
                                         }
@@ -77,7 +77,7 @@ namespace DarkMultiPlayer
                                         }
                                         break;
                                     case (Vessel.Situations.LANDED):
-                                        if (!VesselWorker.fetch.isInSafetyBubble(FlightGlobals.fetch.activeVessel.GetWorldPos3D(), FlightGlobals.fetch.activeVessel.mainBody))
+                                        if (!VesselWorker.Instance.isInSafetyBubble(FlightGlobals.fetch.activeVessel.GetWorldPos3D(), FlightGlobals.fetch.activeVessel.mainBody))
                                         {
                                             myPlayerStatus.statusText = "Landed on " + bodyName;
                                         }
@@ -90,7 +90,7 @@ namespace DarkMultiPlayer
                                         myPlayerStatus.statusText = "Orbiting " + bodyName;
                                         break;
                                     case (Vessel.Situations.PRELAUNCH):
-                                        if (!VesselWorker.fetch.isInSafetyBubble(FlightGlobals.fetch.activeVessel.GetWorldPos3D(), FlightGlobals.fetch.activeVessel.mainBody))
+                                        if (!VesselWorker.Instance.isInSafetyBubble(FlightGlobals.fetch.activeVessel.GetWorldPos3D(), FlightGlobals.fetch.activeVessel.mainBody))
                                         {
                                             myPlayerStatus.statusText = "Launching from " + bodyName;
                                         }
@@ -116,15 +116,15 @@ namespace DarkMultiPlayer
                             }
                             else
                             {
-                                if (LockSystem.fetch.LockExists("control-" + FlightGlobals.ActiveVessel.id.ToString()))
+                                if (LockSystem.Instance.LockExists("control-" + FlightGlobals.ActiveVessel.id.ToString()))
                                 {
-                                    if (LockSystem.fetch.LockIsOurs("control-" + FlightGlobals.ActiveVessel.id.ToString()))
+                                    if (LockSystem.Instance.LockIsOurs("control-" + FlightGlobals.ActiveVessel.id.ToString()))
                                     {
                                         myPlayerStatus.statusText = "Waiting for vessel control";
                                     }
                                     else 
                                     {
-                                        myPlayerStatus.statusText = "Spectating " + LockSystem.fetch.LockOwner("control-" + FlightGlobals.ActiveVessel.id.ToString());
+                                        myPlayerStatus.statusText = "Spectating " + LockSystem.Instance.LockOwner("control-" + FlightGlobals.ActiveVessel.id.ToString());
                                     }
                                 }
                                 else
@@ -171,7 +171,7 @@ namespace DarkMultiPlayer
                     lastPlayerStatusSend = UnityEngine.Time.realtimeSinceStartup;
                     lastPlayerStatus.vesselText = myPlayerStatus.vesselText;
                     lastPlayerStatus.statusText = myPlayerStatus.statusText;
-                    NetworkWorker.fetch.SendPlayerStatus(myPlayerStatus);
+                    NetworkWorker.Instance.SendPlayerStatus(myPlayerStatus);
                 }
 
                 while (addStatusQueue.Count > 0)

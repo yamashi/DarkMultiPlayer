@@ -42,7 +42,7 @@ namespace DarkMultiPlayer
         private const float WINDOW_WIDTH = 300;
         private const float UPDATE_STATUS_INTERVAL = .2f;
 
-        public static PlayerStatusWindow fetch
+        public static PlayerStatusWindow Instance
         {
             get
             {
@@ -106,7 +106,7 @@ namespace DarkMultiPlayer
 
         private void Update()
         {
-            display = Client.fetch.gameRunning;
+            display = Client.Instance.gameRunning;
             if (display)
             {
                 safeMinimized = minmized;
@@ -117,11 +117,11 @@ namespace DarkMultiPlayer
                 if ((UnityEngine.Time.realtimeSinceStartup - lastStatusUpdate) > UPDATE_STATUS_INTERVAL)
                 {
                     lastStatusUpdate = UnityEngine.Time.realtimeSinceStartup;
-                    activeSubspaces = WarpWorker.fetch.GetActiveSubspaces();
+                    activeSubspaces = WarpWorker.Instance.GetActiveSubspaces();
                     subspacePlayers.Clear();
                     foreach (int subspace in activeSubspaces)
                     {
-                        subspacePlayers.Add(subspace, WarpWorker.fetch.GetClientsInSubspace(subspace));
+                        subspacePlayers.Add(subspace, WarpWorker.Instance.GetClientsInSubspace(subspace));
                     }
                 }
             }
@@ -165,19 +165,19 @@ namespace DarkMultiPlayer
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             GUIStyle chatButtonStyle = buttonStyle;
-            if (ChatWorker.fetch.chatButtonHighlighted)
+            if (ChatWorker.Instance.chatButtonHighlighted)
             {
                 chatButtonStyle = highlightStyle;
             }
-            ChatWorker.fetch.display = GUILayout.Toggle(ChatWorker.fetch.display, "Chat", chatButtonStyle);
-            CraftLibraryWorker.fetch.display = GUILayout.Toggle(CraftLibraryWorker.fetch.display, "Craft", buttonStyle);
-            DebugWindow.fetch.display = GUILayout.Toggle(DebugWindow.fetch.display, "Debug", buttonStyle);
+            ChatWorker.Instance.display = GUILayout.Toggle(ChatWorker.Instance.display, "Chat", chatButtonStyle);
+            CraftLibraryWorker.Instance.display = GUILayout.Toggle(CraftLibraryWorker.Instance.display, "Craft", buttonStyle);
+            DebugWindow.Instance.display = GUILayout.Toggle(DebugWindow.Instance.display, "Debug", buttonStyle);
             GUIStyle screenshotButtonStyle = buttonStyle;
-            if (ScreenshotWorker.fetch.screenshotButtonHighlighted)
+            if (ScreenshotWorker.Instance.screenshotButtonHighlighted)
             {
                 screenshotButtonStyle = highlightStyle;
             }
-            ScreenshotWorker.fetch.display = GUILayout.Toggle(ScreenshotWorker.fetch.display, "Screenshot", screenshotButtonStyle);
+            ScreenshotWorker.Instance.display = GUILayout.Toggle(ScreenshotWorker.Instance.display, "Screenshot", screenshotButtonStyle);
             if (GUILayout.Button("-", buttonStyle))
             {
                 minmized = true;
@@ -188,12 +188,12 @@ namespace DarkMultiPlayer
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, scrollStyle);
             foreach (int activeSubspace in activeSubspaces)
             {
-                double ourtime = (TimeSyncer.fetch.currentSubspace != -1) ? TimeSyncer.fetch.GetUniverseTime() : Planetarium.GetUniversalTime();
-                double diffTime = TimeSyncer.fetch.GetUniverseTime(activeSubspace) - ourtime;
+                double ourtime = (TimeSyncer.Instance.currentSubspace != -1) ? TimeSyncer.Instance.GetUniverseTime() : Planetarium.GetUniversalTime();
+                double diffTime = TimeSyncer.Instance.GetUniverseTime(activeSubspace) - ourtime;
                 string diffState = "NOW";
                 if (activeSubspace != -1)
                 {
-                    if (activeSubspace != TimeSyncer.fetch.currentSubspace)
+                    if (activeSubspace != TimeSyncer.Instance.currentSubspace)
                     {
                         diffState = (diffTime > 0) ? SecondsToVeryShortString((int)diffTime) + " in the future" : SecondsToVeryShortString(-(int)diffTime) + " in the past";
                     }
@@ -203,29 +203,29 @@ namespace DarkMultiPlayer
                     diffState = "Unknown";
                 }
                 GUILayout.BeginHorizontal(subspaceStyle);
-                GUILayout.Label("T+ " + SecondsToShortString((int)TimeSyncer.fetch.GetUniverseTime(activeSubspace)) + " - " + diffState);
-                if ((activeSubspace != TimeSyncer.fetch.currentSubspace) && (activeSubspace != -1))
+                GUILayout.Label("T+ " + SecondsToShortString((int)TimeSyncer.Instance.GetUniverseTime(activeSubspace)) + " - " + diffState);
+                if ((activeSubspace != TimeSyncer.Instance.currentSubspace) && (activeSubspace != -1))
                 {
                     GUILayout.FlexibleSpace();
                     //Only draw the subspace button in subspace mode, and only to the future.
-                    if (WarpWorker.fetch.warpMode == WarpMode.SUBSPACE && (diffTime > 0))
+                    if (WarpWorker.Instance.warpMode == WarpMode.SUBSPACE && (diffTime > 0))
                     {
                         if (GUILayout.Button("Sync", buttonStyle))
                         {
-                            TimeSyncer.fetch.LockSubspace(activeSubspace);
+                            TimeSyncer.Instance.LockSubspace(activeSubspace);
                         }
                     }
                 }
                 GUILayout.EndHorizontal();
                 foreach (string activeclient in subspacePlayers[activeSubspace])
                 {
-                    if (activeclient == Settings.fetch.playerName)
+                    if (activeclient == Settings.Instance.playerName)
                     {
-                        DrawPlayerEntry(PlayerStatusWorker.fetch.myPlayerStatus);
+                        DrawPlayerEntry(PlayerStatusWorker.Instance.myPlayerStatus);
                     }
                     else
                     {
-                        DrawPlayerEntry(PlayerStatusWorker.fetch.GetPlayerStatus(activeclient));
+                        DrawPlayerEntry(PlayerStatusWorker.Instance.GetPlayerStatus(activeclient));
                     }
                 }
             }
@@ -236,14 +236,14 @@ namespace DarkMultiPlayer
             {
                 disconnectEventHandled = false;
             }
-            OptionsWindow.fetch.display = GUILayout.Toggle(OptionsWindow.fetch.display, "Options", buttonStyle);
+            OptionsWindow.Instance.display = GUILayout.Toggle(OptionsWindow.Instance.display, "Options", buttonStyle);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
 
         private void CheckWindowLock()
         {
-            if (!Client.fetch.gameRunning)
+            if (!Client.Instance.gameRunning)
             {
                 RemoveWindowLock();
                 return;
@@ -567,19 +567,19 @@ namespace DarkMultiPlayer
             GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
             GUIStyle chatButtonStyle = buttonStyle;
-            if (ChatWorker.fetch.chatButtonHighlighted)
+            if (ChatWorker.Instance.chatButtonHighlighted)
             {
                 chatButtonStyle = highlightStyle;
             }
-            ChatWorker.fetch.display = GUILayout.Toggle(ChatWorker.fetch.display, "C", chatButtonStyle);
-            DebugWindow.fetch.display = GUILayout.Toggle(DebugWindow.fetch.display, "D", buttonStyle);
+            ChatWorker.Instance.display = GUILayout.Toggle(ChatWorker.Instance.display, "C", chatButtonStyle);
+            DebugWindow.Instance.display = GUILayout.Toggle(DebugWindow.Instance.display, "D", buttonStyle);
             GUIStyle screenshotButtonStyle = buttonStyle;
-            if (ScreenshotWorker.fetch.screenshotButtonHighlighted)
+            if (ScreenshotWorker.Instance.screenshotButtonHighlighted)
             {
                 screenshotButtonStyle = highlightStyle;
             }
-            ScreenshotWorker.fetch.display = GUILayout.Toggle(ScreenshotWorker.fetch.display, "S", screenshotButtonStyle);
-            OptionsWindow.fetch.display = GUILayout.Toggle(OptionsWindow.fetch.display, "O", buttonStyle);
+            ScreenshotWorker.Instance.display = GUILayout.Toggle(ScreenshotWorker.Instance.display, "S", screenshotButtonStyle);
+            OptionsWindow.Instance.display = GUILayout.Toggle(OptionsWindow.Instance.display, "O", buttonStyle);
             if (GUILayout.Button("+", buttonStyle))
             {
                 windowRect.xMax = minWindowRect.xMax;
@@ -603,9 +603,9 @@ namespace DarkMultiPlayer
             if (!playerNameStyle.ContainsKey(playerStatus.playerName))
             {
                 playerNameStyle[playerStatus.playerName] = new GUIStyle(GUI.skin.label);
-                playerNameStyle[playerStatus.playerName].normal.textColor = PlayerColorWorker.fetch.GetPlayerColor(playerStatus.playerName);
-                playerNameStyle[playerStatus.playerName].hover.textColor = PlayerColorWorker.fetch.GetPlayerColor(playerStatus.playerName);
-                playerNameStyle[playerStatus.playerName].active.textColor = PlayerColorWorker.fetch.GetPlayerColor(playerStatus.playerName);
+                playerNameStyle[playerStatus.playerName].normal.textColor = PlayerColorWorker.Instance.GetPlayerColor(playerStatus.playerName);
+                playerNameStyle[playerStatus.playerName].hover.textColor = PlayerColorWorker.Instance.GetPlayerColor(playerStatus.playerName);
+                playerNameStyle[playerStatus.playerName].active.textColor = PlayerColorWorker.Instance.GetPlayerColor(playerStatus.playerName);
                 playerNameStyle[playerStatus.playerName].fontStyle = FontStyle.Bold;
                 playerNameStyle[playerStatus.playerName].stretchWidth = true;
                 playerNameStyle[playerStatus.playerName].wordWrap = false;

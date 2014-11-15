@@ -29,7 +29,7 @@ namespace DarkMultiPlayer
             ExpireCache();
         }
 
-        public static UniverseSyncCache fetch
+        public static UniverseSyncCache Instance
         {
             get
             {
@@ -75,7 +75,7 @@ namespace DarkMultiPlayer
                 }
             }
             //While the directory is over (cacheSize) MB
-            while (currentCacheSize > (Settings.fetch.cacheSize * 1024 * 1024))
+            while (currentCacheSize > (Settings.Instance.cacheSize * 1024 * 1024))
             {
                 string deleteObject = null;
                 //Find oldest file

@@ -74,7 +74,7 @@ namespace DarkMultiPlayer
             subassemblyPath = Path.Combine(savePath, "Subassemblies");
         }
 
-        public static CraftLibraryWorker fetch
+        public static CraftLibraryWorker Instance
         {
             get
             {
@@ -121,14 +121,14 @@ namespace DarkMultiPlayer
 
                 if (deleteCraftName != null)
                 {
-                    DeleteCraftEntry(Settings.fetch.playerName, deleteCraftType, deleteCraftName);
+                    DeleteCraftEntry(Settings.Instance.playerName, deleteCraftType, deleteCraftName);
                     using (MessageWriter mw = new MessageWriter())
                     {
                         mw.Write<int>((int)CraftMessageType.DELETE_FILE);
-                        mw.Write<string>(Settings.fetch.playerName);
+                        mw.Write<string>(Settings.Instance.playerName);
                         mw.Write<int>((int)deleteCraftType);
                         mw.Write<string>(deleteCraftName);
-                        NetworkWorker.fetch.SendCraftLibraryMessage(mw.GetMessageBytes());
+                        NetworkWorker.Instance.SendCraftLibraryMessage(mw.GetMessageBytes());
                     }
                     deleteCraftName = null;
                     deleteCraftType = CraftType.VAB;
@@ -177,12 +177,12 @@ namespace DarkMultiPlayer
                 using (MessageWriter mw = new MessageWriter())
                 {
                     mw.Write<int>((int)CraftMessageType.UPLOAD_FILE);
-                    mw.Write<string>(Settings.fetch.playerName);
+                    mw.Write<string>(Settings.Instance.playerName);
                     mw.Write<int>((int)type);
                     mw.Write<string>(name);
                     mw.Write<byte[]>(fileData);
-                    NetworkWorker.fetch.SendCraftLibraryMessage(mw.GetMessageBytes());
-                    AddCraftEntry(Settings.fetch.playerName, uploadCraftType, uploadCraftName);
+                    NetworkWorker.Instance.SendCraftLibraryMessage(mw.GetMessageBytes());
+                    AddCraftEntry(Settings.Instance.playerName, uploadCraftType, uploadCraftName);
                     displayCraftUploadingMessage = true;
                 }
             }
@@ -199,11 +199,11 @@ namespace DarkMultiPlayer
             using (MessageWriter mw = new MessageWriter())
             {
                 mw.Write<int>((int)CraftMessageType.REQUEST_FILE);
-                mw.Write<string>(Settings.fetch.playerName);
+                mw.Write<string>(Settings.Instance.playerName);
                 mw.Write<string>(playerName);
                 mw.Write<int>((int)craftType);
                 mw.Write<string>(craftName);
-                NetworkWorker.fetch.SendCraftLibraryMessage(mw.GetMessageBytes());
+                NetworkWorker.Instance.SendCraftLibraryMessage(mw.GetMessageBytes());
             }
         }
 
@@ -243,7 +243,7 @@ namespace DarkMultiPlayer
                         }
                         if (playerList[playerName].Count == 0)
                         {
-                            if (playerName != Settings.fetch.playerName)
+                            if (playerName != Settings.Instance.playerName)
                             {
                                 playerList.Remove(playerName);
                                 if (playersWithCrafts.Contains(playerName))
@@ -339,7 +339,7 @@ namespace DarkMultiPlayer
             if (safeDisplay && selectedPlayer != null)
             {
                 //Sanity check
-                if (playersWithCrafts.Contains(selectedPlayer) || selectedPlayer == Settings.fetch.playerName)
+                if (playersWithCrafts.Contains(selectedPlayer) || selectedPlayer == Settings.Instance.playerName)
                 {
                     libraryWindowRect = GUILayout.Window(6708 + Client.WINDOW_OFFSET, libraryWindowRect, DrawLibraryContent, "DarkMultiPlayer - " + selectedPlayer + " Craft Library", windowStyle, libraryLayoutOptions);
                 }
@@ -357,10 +357,10 @@ namespace DarkMultiPlayer
             GUI.DragWindow(moveRect);
             //Draw the player buttons
             playerScrollPos = GUILayout.BeginScrollView(playerScrollPos, scrollStyle);
-            DrawPlayerButton(Settings.fetch.playerName);
+            DrawPlayerButton(Settings.Instance.playerName);
             foreach (string playerName in playersWithCrafts)
             {
-                if (playerName != Settings.fetch.playerName)
+                if (playerName != Settings.Instance.playerName)
                 {
                     DrawPlayerButton(playerName);
                 }
@@ -389,7 +389,7 @@ namespace DarkMultiPlayer
             GUILayout.BeginVertical();
             GUI.DragWindow(moveRect);
             bool newShowUpload = false;
-            if (selectedPlayer == Settings.fetch.playerName)
+            if (selectedPlayer == Settings.Instance.playerName)
             {
                 newShowUpload = GUILayout.Toggle(showUpload, "Upload", buttonStyle);
             }
@@ -416,7 +416,7 @@ namespace DarkMultiPlayer
 
         private void CheckWindowLock()
         {
-            if (!Client.fetch.gameRunning)
+            if (!Client.Instance.gameRunning)
             {
                 RemoveWindowLock();
                 return;
@@ -468,11 +468,11 @@ namespace DarkMultiPlayer
                 GUILayout.Label(entryType.Key.ToString(), labelStyle);
                 foreach (string entryName in entryType.Value)
                 {
-                    if (playerList.ContainsKey(Settings.fetch.playerName))
+                    if (playerList.ContainsKey(Settings.Instance.playerName))
                     {
-                        if (playerList[Settings.fetch.playerName].ContainsKey(entryType.Key))
+                        if (playerList[Settings.Instance.playerName].ContainsKey(entryType.Key))
                         {
-                            if (playerList[Settings.fetch.playerName][entryType.Key].Contains(entryName))
+                            if (playerList[Settings.Instance.playerName][entryType.Key].Contains(entryName))
                             {
                                 GUI.enabled = false;
                             }
@@ -532,7 +532,7 @@ namespace DarkMultiPlayer
                     GUILayout.Label(entry.Key.ToString(), labelStyle);
                     foreach (string craftName in entry.Value)
                     {
-                        if (selectedPlayer == Settings.fetch.playerName)
+                        if (selectedPlayer == Settings.Instance.playerName)
                         {
                             //Also draw remove button on player screen
                             GUILayout.BeginHorizontal();

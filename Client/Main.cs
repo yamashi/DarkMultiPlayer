@@ -48,7 +48,7 @@ namespace DarkMultiPlayer
             singleton = this;
         }
 
-        public static Client fetch
+        public static Client Instance
         {
             get
             {
@@ -72,7 +72,7 @@ namespace DarkMultiPlayer
                 UnityEngine.Debug.LogError("DMP is installed at '" + assemblyPath + "', It should be installed at '" + assemblyShouldBeInstalledAt + "'");
                 return;
             }
-            if (Settings.fetch.disclaimerAccepted != 1)
+            if (Settings.Instance.disclaimerAccepted != 1)
             {
                 modDisabled = true;
                 DisclaimerWindow.Enable();
@@ -208,10 +208,10 @@ namespace DarkMultiPlayer
             {
                 if (HighLogic.LoadedScene == GameScenes.MAINMENU)
                 {
-                    if (!ModWorker.fetch.dllListBuilt)
+                    if (!ModWorker.Instance.dllListBuilt)
                     {
-                        ModWorker.fetch.dllListBuilt = true;
-                        ModWorker.fetch.BuildDllFileList();
+                        ModWorker.Instance.dllListBuilt = true;
+                        ModWorker.Instance.BuildDllFileList();
                     }
                     if (!dmpSaveChecked)
                     {
@@ -221,66 +221,66 @@ namespace DarkMultiPlayer
                 }
 
                 //Handle GUI events
-                if (!PlayerStatusWindow.fetch.disconnectEventHandled)
+                if (!PlayerStatusWindow.Instance.disconnectEventHandled)
                 {
-                    PlayerStatusWindow.fetch.disconnectEventHandled = true;
+                    PlayerStatusWindow.Instance.disconnectEventHandled = true;
                     forceQuit = true;
-                    NetworkWorker.fetch.SendDisconnect("Quit");
+                    NetworkWorker.Instance.SendDisconnect("Quit");
                 }
-                if (!ConnectionWindow.fetch.renameEventHandled)
+                if (!ConnectionWindow.Instance.renameEventHandled)
                 {
-                    PlayerStatusWorker.fetch.myPlayerStatus.playerName = Settings.fetch.playerName;
-                    Settings.fetch.SaveSettings();
-                    ConnectionWindow.fetch.renameEventHandled = true;
+                    PlayerStatusWorker.Instance.myPlayerStatus.playerName = Settings.Instance.playerName;
+                    Settings.Instance.SaveSettings();
+                    ConnectionWindow.Instance.renameEventHandled = true;
                 }
-                if (!ConnectionWindow.fetch.addEventHandled)
+                if (!ConnectionWindow.Instance.addEventHandled)
                 {
-                    Settings.fetch.servers.Add(ConnectionWindow.fetch.addEntry);
-                    ConnectionWindow.fetch.addEntry = null;
-                    Settings.fetch.SaveSettings();
-                    ConnectionWindow.fetch.addingServer = false;
-                    ConnectionWindow.fetch.addEventHandled = true;
+                    Settings.Instance.servers.Add(ConnectionWindow.Instance.addEntry);
+                    ConnectionWindow.Instance.addEntry = null;
+                    Settings.Instance.SaveSettings();
+                    ConnectionWindow.Instance.addingServer = false;
+                    ConnectionWindow.Instance.addEventHandled = true;
                 }
-                if (!ConnectionWindow.fetch.editEventHandled)
+                if (!ConnectionWindow.Instance.editEventHandled)
                 {
-                    Settings.fetch.servers[ConnectionWindow.fetch.selected].name = ConnectionWindow.fetch.editEntry.name;
-                    Settings.fetch.servers[ConnectionWindow.fetch.selected].address = ConnectionWindow.fetch.editEntry.address;
-                    Settings.fetch.servers[ConnectionWindow.fetch.selected].port = ConnectionWindow.fetch.editEntry.port;
-                    ConnectionWindow.fetch.editEntry = null;
-                    Settings.fetch.SaveSettings();
-                    ConnectionWindow.fetch.addingServer = false;
-                    ConnectionWindow.fetch.editEventHandled = true;
+                    Settings.Instance.servers[ConnectionWindow.Instance.selected].name = ConnectionWindow.Instance.editEntry.name;
+                    Settings.Instance.servers[ConnectionWindow.Instance.selected].address = ConnectionWindow.Instance.editEntry.address;
+                    Settings.Instance.servers[ConnectionWindow.Instance.selected].port = ConnectionWindow.Instance.editEntry.port;
+                    ConnectionWindow.Instance.editEntry = null;
+                    Settings.Instance.SaveSettings();
+                    ConnectionWindow.Instance.addingServer = false;
+                    ConnectionWindow.Instance.editEventHandled = true;
                 }
-                if (!ConnectionWindow.fetch.removeEventHandled)
+                if (!ConnectionWindow.Instance.removeEventHandled)
                 {
-                    Settings.fetch.servers.RemoveAt(ConnectionWindow.fetch.selected);
-                    ConnectionWindow.fetch.selected = -1;
-                    Settings.fetch.SaveSettings();
-                    ConnectionWindow.fetch.removeEventHandled = true;
+                    Settings.Instance.servers.RemoveAt(ConnectionWindow.Instance.selected);
+                    ConnectionWindow.Instance.selected = -1;
+                    Settings.Instance.SaveSettings();
+                    ConnectionWindow.Instance.removeEventHandled = true;
                 }
-                if (!ConnectionWindow.fetch.connectEventHandled)
+                if (!ConnectionWindow.Instance.connectEventHandled)
                 {
-                    ConnectionWindow.fetch.connectEventHandled = true;
-                    NetworkWorker.fetch.ConnectToServer(Settings.fetch.servers[ConnectionWindow.fetch.selected].address, Settings.fetch.servers[ConnectionWindow.fetch.selected].port);
+                    ConnectionWindow.Instance.connectEventHandled = true;
+                    NetworkWorker.Instance.ConnectToServer(Settings.Instance.servers[ConnectionWindow.Instance.selected].address, Settings.Instance.servers[ConnectionWindow.Instance.selected].port);
                 }
                 if (commandLineConnect != null && HighLogic.LoadedScene == GameScenes.MAINMENU && Time.timeSinceLevelLoad > 1f)
                 {
-                    NetworkWorker.fetch.ConnectToServer(commandLineConnect.address, commandLineConnect.port);
+                    NetworkWorker.Instance.ConnectToServer(commandLineConnect.address, commandLineConnect.port);
                     commandLineConnect = null;
                 }
 
-                if (!ConnectionWindow.fetch.disconnectEventHandled)
+                if (!ConnectionWindow.Instance.disconnectEventHandled)
                 {
-                    ConnectionWindow.fetch.disconnectEventHandled = true;
+                    ConnectionWindow.Instance.disconnectEventHandled = true;
                     gameRunning = false;
                     fireReset = true;
-                    if (NetworkWorker.fetch.state == ClientState.CONNECTING)
+                    if (NetworkWorker.Instance.state == ClientState.CONNECTING)
                     {
-                        NetworkWorker.fetch.Disconnect("Cancelled connection to server");
+                        NetworkWorker.Instance.Disconnect("Cancelled connection to server");
                     }
                     else
                     {
-                        NetworkWorker.fetch.SendDisconnect("Quit during initial sync");
+                        NetworkWorker.Instance.SendDisconnect("Quit during initial sync");
                     }
                 }
 
@@ -293,15 +293,15 @@ namespace DarkMultiPlayer
                     catch (Exception e)
                     {
                         DarkLog.Debug("Threw in UpdateEvent, exception: " + e);
-                        if (NetworkWorker.fetch.state != ClientState.RUNNING)
+                        if (NetworkWorker.Instance.state != ClientState.RUNNING)
                         {
-                            if (NetworkWorker.fetch.state != ClientState.DISCONNECTED)
+                            if (NetworkWorker.Instance.state != ClientState.DISCONNECTED)
                             {
-                                NetworkWorker.fetch.SendDisconnect("Unhandled error while syncing!");
+                                NetworkWorker.Instance.SendDisconnect("Unhandled error while syncing!");
                             }
                             else
                             {
-                                NetworkWorker.fetch.Disconnect("Unhandled error while syncing!");
+                                NetworkWorker.Instance.Disconnect("Unhandled error while syncing!");
                             }
                         }
                     }
@@ -342,21 +342,21 @@ namespace DarkMultiPlayer
                     {
                         gameRunning = false;
                         fireReset = true;
-                        NetworkWorker.fetch.SendDisconnect("Quit to main menu");
+                        NetworkWorker.Instance.SendDisconnect("Quit to main menu");
                     }
 
-                    if (ScreenshotWorker.fetch.uploadScreenshot)
+                    if (ScreenshotWorker.Instance.uploadScreenshot)
                     {
-                        ScreenshotWorker.fetch.uploadScreenshot = false;
+                        ScreenshotWorker.Instance.uploadScreenshot = false;
                         StartCoroutine(UploadScreenshot());
                     }
 
-                    if (HighLogic.CurrentGame.flagURL != Settings.fetch.selectedFlag)
+                    if (HighLogic.CurrentGame.flagURL != Settings.Instance.selectedFlag)
                     {
                         DarkLog.Debug("Saving selected flag");
-                        Settings.fetch.selectedFlag = HighLogic.CurrentGame.flagURL;
-                        Settings.fetch.SaveSettings();
-                        FlagSyncer.fetch.flagChangeEvent = true;
+                        Settings.Instance.selectedFlag = HighLogic.CurrentGame.flagURL;
+                        Settings.Instance.SaveSettings();
+                        FlagSyncer.Instance.flagChangeEvent = true;
                     }
 
                     // save every GeeASL from each body in FlightGlobals
@@ -406,16 +406,16 @@ namespace DarkMultiPlayer
             }
             catch (Exception e)
             {
-                DarkLog.Debug("Threw in Update, state " + NetworkWorker.fetch.state.ToString() + ", exception" + e);
-                if (NetworkWorker.fetch.state != ClientState.RUNNING)
+                DarkLog.Debug("Threw in Update, state " + NetworkWorker.Instance.state.ToString() + ", exception" + e);
+                if (NetworkWorker.Instance.state != ClientState.RUNNING)
                 {
-                    if (NetworkWorker.fetch.state != ClientState.DISCONNECTED)
+                    if (NetworkWorker.Instance.state != ClientState.DISCONNECTED)
                     {
-                        NetworkWorker.fetch.SendDisconnect("Unhandled error while syncing!");
+                        NetworkWorker.Instance.SendDisconnect("Unhandled error while syncing!");
                     }
                     else
                     {
-                        NetworkWorker.fetch.Disconnect("Unhandled error while syncing!");
+                        NetworkWorker.Instance.Disconnect("Unhandled error while syncing!");
                     }
                 }
             }
@@ -425,8 +425,8 @@ namespace DarkMultiPlayer
         public IEnumerator<WaitForEndOfFrame> UploadScreenshot()
         {
             yield return new WaitForEndOfFrame();
-            ScreenshotWorker.fetch.SendScreenshot();
-            ScreenshotWorker.fetch.screenshotTaken = true;
+            ScreenshotWorker.Instance.SendScreenshot();
+            ScreenshotWorker.Instance.screenshotTaken = true;
         }
 
         public void FixedUpdate()
@@ -445,15 +445,15 @@ namespace DarkMultiPlayer
                 catch (Exception e)
                 {
                     DarkLog.Debug("Threw in FixedUpdate event, exception: " + e);
-                    if (NetworkWorker.fetch.state != ClientState.RUNNING)
+                    if (NetworkWorker.Instance.state != ClientState.RUNNING)
                     {
-                        if (NetworkWorker.fetch.state != ClientState.DISCONNECTED)
+                        if (NetworkWorker.Instance.state != ClientState.DISCONNECTED)
                         {
-                            NetworkWorker.fetch.SendDisconnect("Unhandled error while syncing!");
+                            NetworkWorker.Instance.SendDisconnect("Unhandled error while syncing!");
                         }
                         else
                         {
-                            NetworkWorker.fetch.Disconnect("Unhandled error while syncing!");
+                            NetworkWorker.Instance.Disconnect("Unhandled error while syncing!");
                         }
                     }
                 }
@@ -506,17 +506,17 @@ namespace DarkMultiPlayer
             {
                 HighLogic.CurrentGame.Parameters.Difficulty.AllowStockVessels = false;
             }
-            HighLogic.CurrentGame.flightState.universalTime = TimeSyncer.fetch.GetUniverseTime();
+            HighLogic.CurrentGame.flightState.universalTime = TimeSyncer.Instance.GetUniverseTime();
 
             //Load DMP stuff
-            VesselWorker.fetch.LoadKerbalsIntoGame();
-            VesselWorker.fetch.LoadVesselsIntoGame();
+            VesselWorker.Instance.LoadKerbalsIntoGame();
+            VesselWorker.Instance.LoadVesselsIntoGame();
 
             //Load the scenarios from the server
-            ScenarioWorker.fetch.LoadScenarioDataIntoGame();
+            ScenarioWorker.Instance.LoadScenarioDataIntoGame();
 
             //Load the missing scenarios as well (Eg, Contracts and stuff for career mode
-            ScenarioWorker.fetch.LoadMissingScenarioDataIntoGame();
+            ScenarioWorker.Instance.LoadMissingScenarioDataIntoGame();
 
             //This only makes KSP complain
             HighLogic.CurrentGame.CrewRoster.ValidateAssignments(HighLogic.CurrentGame);
@@ -528,7 +528,7 @@ namespace DarkMultiPlayer
             //.Start() seems to stupidly .Load() somewhere - Let's overwrite it so it loads correctly.
             GamePersistence.SaveGame(HighLogic.CurrentGame, "persistent", HighLogic.SaveFolder, SaveMode.OVERWRITE);
             HighLogic.CurrentGame.Start();
-            ChatWorker.fetch.display = true;
+            ChatWorker.Instance.display = true;
             DarkLog.Debug("Started!");
         }
 
@@ -619,7 +619,7 @@ namespace DarkMultiPlayer
 
             //DMP stuff
             returnGame.startScene = GameScenes.SPACECENTER;
-            returnGame.flagURL = Settings.fetch.selectedFlag;
+            returnGame.flagURL = Settings.Instance.selectedFlag;
             returnGame.Title = "DarkMultiPlayer";
             returnGame.Parameters.Flight.CanQuickLoad = false;
             returnGame.Parameters.Flight.CanRestart = false;

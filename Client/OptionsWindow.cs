@@ -30,13 +30,17 @@ namespace DarkMultiPlayer
         private bool settingChat;
         private bool settingScreenshot;
 
+        private UniverseConverterWindow m_universeConverterWindow;
+
         public OptionsWindow()
         {
+            m_universeConverterWindow = new UniverseConverterWindow();
+
             Client.updateEvent.Add(this.Update);
             Client.drawEvent.Add(this.Draw);
         }
 
-        public static OptionsWindow fetch
+        public static OptionsWindow Instance
         {
             get
             {
@@ -87,15 +91,15 @@ namespace DarkMultiPlayer
             if (!loadEventHandled)
             {
                 loadEventHandled = true;
-                tempColor = Settings.fetch.playerColor;
-                newCacheSize = Settings.fetch.cacheSize.ToString();
+                tempColor = Settings.Instance.playerColor;
+                newCacheSize = Settings.Instance.cacheSize.ToString();
             }
             //Player color
             GUILayout.BeginVertical();
             GUI.DragWindow(moveRect);
             GUILayout.BeginHorizontal();
             GUILayout.Label("Player name color: ");
-            GUILayout.Label(Settings.fetch.playerName, tempColorLabelStyle);
+            GUILayout.Label(Settings.Instance.playerName, tempColorLabelStyle);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("R: ");
@@ -118,20 +122,20 @@ namespace DarkMultiPlayer
             }
             if (GUILayout.Button("Set", buttonStyle))
             {
-                PlayerStatusWindow.fetch.colorEventHandled = false;
-                Settings.fetch.playerColor = tempColor;
-                Settings.fetch.SaveSettings();
-                if (NetworkWorker.fetch.state == DarkMultiPlayerCommon.ClientState.RUNNING)
+                PlayerStatusWindow.Instance.colorEventHandled = false;
+                Settings.Instance.playerColor = tempColor;
+                Settings.Instance.SaveSettings();
+                if (NetworkWorker.Instance.state == DarkMultiPlayerCommon.ClientState.RUNNING)
                 {
-                    PlayerColorWorker.fetch.SendPlayerColorToServer();
+                    PlayerColorWorker.Instance.SendPlayerColorToServer();
                 }
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
             //Cache
             GUILayout.Label("Cache size");
-            GUILayout.Label("Current size: " + Math.Round((UniverseSyncCache.fetch.currentCacheSize / (float)(1024 * 1024)), 3) + "MB.");
-            GUILayout.Label("Max size: " + Settings.fetch.cacheSize + "MB.");
+            GUILayout.Label("Current size: " + Math.Round((UniverseSyncCache.Instance.currentCacheSize / (float)(1024 * 1024)), 3) + "MB.");
+            GUILayout.Label("Max size: " + Settings.Instance.cacheSize + "MB.");
             newCacheSize = GUILayout.TextArea(newCacheSize);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Set", buttonStyle))
@@ -149,26 +153,26 @@ namespace DarkMultiPlayer
                         tempCacheSize = 1000;
                         newCacheSize = tempCacheSize.ToString();
                     }
-                    Settings.fetch.cacheSize = tempCacheSize;
-                    Settings.fetch.SaveSettings();
+                    Settings.Instance.cacheSize = tempCacheSize;
+                    Settings.Instance.SaveSettings();
                 }
                 else
                 {
-                    newCacheSize = Settings.fetch.cacheSize.ToString();
+                    newCacheSize = Settings.Instance.cacheSize.ToString();
                 }
             }
             if (GUILayout.Button("Expire cache"))
             {
-                UniverseSyncCache.fetch.ExpireCache();
+                UniverseSyncCache.Instance.ExpireCache();
             }
             if (GUILayout.Button("Delete cache"))
             {
-                UniverseSyncCache.fetch.DeleteCache();
+                UniverseSyncCache.Instance.DeleteCache();
             }
             GUILayout.EndHorizontal();
             //Key bindings
             GUILayout.Space(10);
-            string chatDescription = "Set chat key (current: " + Settings.fetch.chatKey + ")";
+            string chatDescription = "Set chat key (current: " + Settings.Instance.chatKey + ")";
             if (settingChat)
             {
                 chatDescription = "Setting chat key (click to cancel)...";
@@ -176,8 +180,8 @@ namespace DarkMultiPlayer
                 {
                     if (Event.current.keyCode != KeyCode.Escape)
                     {
-                        Settings.fetch.chatKey = Event.current.keyCode;
-                        Settings.fetch.SaveSettings();
+                        Settings.Instance.chatKey = Event.current.keyCode;
+                        Settings.Instance.SaveSettings();
                         settingChat = false;
                     }
                     else
@@ -190,7 +194,7 @@ namespace DarkMultiPlayer
             {
                 settingChat = !settingChat;
             }
-            string screenshotDescription = "Set screenshot key (current: " + Settings.fetch.screenshotKey.ToString() + ")";
+            string screenshotDescription = "Set screenshot key (current: " + Settings.Instance.screenshotKey.ToString() + ")";
             if (settingScreenshot)
             {
                 screenshotDescription = "Setting screenshot key (click to cancel)...";
@@ -198,8 +202,8 @@ namespace DarkMultiPlayer
                 {
                     if (Event.current.keyCode != KeyCode.Escape)
                     {
-                        Settings.fetch.screenshotKey = Event.current.keyCode;
-                        Settings.fetch.SaveSettings();
+                        Settings.Instance.screenshotKey = Event.current.keyCode;
+                        Settings.Instance.SaveSettings();
                         settingScreenshot = false;
                     }
                     else
@@ -216,17 +220,19 @@ namespace DarkMultiPlayer
             GUILayout.Label("Generate a server DMPModControl:");
             if (GUILayout.Button("Generate blacklist DMPModControl.txt"))
             {
-                ModWorker.fetch.GenerateModControlFile(false);
+                ModWorker.Instance.GenerateModControlFile(false);
             }
             if (GUILayout.Button("Generate whitelist DMPModControl.txt"))
             {
-                ModWorker.fetch.GenerateModControlFile(true);
+                ModWorker.Instance.GenerateModControlFile(true);
             }
-            UniverseConverterWindow.fetch.display = GUILayout.Toggle(UniverseConverterWindow.fetch.display, "Generate Universe from saved game", buttonStyle);
+
+            m_universeConverterWindow.Display = GUILayout.Toggle(m_universeConverterWindow.Display, "Generate Universe from saved game", buttonStyle);
+
             if (GUILayout.Button("Reset disclaimer"))
             {
-                Settings.fetch.disclaimerAccepted = 0;
-                Settings.fetch.SaveSettings();
+                Settings.Instance.disclaimerAccepted = 0;
+                Settings.Instance.SaveSettings();
             }
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Close", buttonStyle))
@@ -238,7 +244,7 @@ namespace DarkMultiPlayer
 
         private void CheckWindowLock()
         {
-            if (!Client.fetch.gameRunning)
+            if (!Client.Instance.gameRunning)
             {
                 RemoveWindowLock();
                 return;

@@ -35,7 +35,7 @@ namespace DarkMultiPlayer
             }
         }
 
-        public static DMPModInterface fetch
+        public static DMPModInterface Instance
         {
             get
             {
@@ -162,7 +162,7 @@ namespace DarkMultiPlayer
                 mw.Write<bool>(relay);
                 mw.Write<bool>(highPriority);
                 mw.Write<byte[]>(messageData);
-                NetworkWorker.fetch.SendModMessage(mw.GetMessageBytes(), highPriority);
+                NetworkWorker.Instance.SendModMessage(mw.GetMessageBytes(), highPriority);
             }
         }
 
