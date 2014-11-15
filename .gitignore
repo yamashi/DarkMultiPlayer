@@ -9,3 +9,4 @@ Server/bin/*
 Server/obj/*
 *.suo
 *.csproj.user
+!Lidgren.Network.dll
