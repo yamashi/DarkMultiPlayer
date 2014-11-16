@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncConsoleReader.cs" />
+    <Compile Include="CommandLineParser.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="EventAggregator.cs" />
     <Compile Include="EventHandler.cs" />

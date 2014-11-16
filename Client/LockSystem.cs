@@ -2,265 +2,165 @@ using System;
 using System.Collections.Generic;
 using DarkMultiPlayerCommon;
 using MessageStream;
+using DarkMultiPlayerCommon.Events;
 
 namespace DarkMultiPlayer
 {
-    public delegate void AcquireEvent(string playerName,string lockName,bool lockResult);
-    public delegate void ReleaseEvent(string playerName,string lockName);
-    public class LockSystem
+    public delegate void AcquireDelegate(string playerName,string lockName,bool lockResult);
+    public delegate void ReleaseDelegate(string playerName,string lockName);
+    public class LockSystem : IRegisterable
     {
-        private static LockSystem singleton;
-        private Dictionary<string, string> serverLocks = new Dictionary<string, string>();
-        private List<AcquireEvent> lockAcquireEvents = new List<AcquireEvent>();
-        private List<ReleaseEvent> lockReleaseEvents = new List<ReleaseEvent>();
-        private Dictionary<string, double> lastAcquireTime = new Dictionary<string, double>();
-        private object lockObject = new object();
+        private Dictionary<string, string> m_serverLocks = new Dictionary<string, string>();
+        private Dictionary<string, double> m_lastAcquireTime = new Dictionary<string, double>();
 
-        public static LockSystem Instance
+        public event AcquireDelegate AcquireEvent;
+        public event ReleaseDelegate ReleaseEvent;
+
+        #region Packet handlers
+        public void Register(IEventAggregator aggregator)
         {
-            get
+            aggregator.Register<Messages.ServerClient_LockAcquireRecv>(HandleLockAcquire);
+            aggregator.Register<Messages.ServerClient_LockReleaseRecv>(HandleLockRelease);
+            aggregator.Register<Messages.ServerClient_LockListRecv>(HandleLockList);
+        }
+
+        public void HandleLockAcquire(Messages.ServerClient_LockAcquireRecv msg)
+        {
+            if (msg.result)
             {
-                return singleton;
+                m_serverLocks[msg.name] = msg.player;
+            }
+             AcquireEvent(msg.player, msg.name, msg.result);
+        }
+
+        public void HandleLockRelease(Messages.ServerClient_LockReleaseRecv msg)
+        {
+            if (m_serverLocks.ContainsKey(msg.name))
+            {
+                m_serverLocks.Remove(msg.name);
+            }
+
+            ReleaseEvent(msg.player, msg.name);
+        }
+
+        public void HandleLockList(Messages.ServerClient_LockListRecv msg)
+        {
+            m_serverLocks.Clear();
+            foreach(var entry in msg.locks)
+            {
+                m_serverLocks.Add(entry.key, entry.value);
             }
         }
+        #endregion
 
         public void ThrottledAcquireLock(string lockname)
         {
-            if (lastAcquireTime.ContainsKey(lockname) ? ((UnityEngine.Time.realtimeSinceStartup - lastAcquireTime[lockname]) > 5f) : true)
+            if (m_lastAcquireTime.ContainsKey(lockname) ? ((UnityEngine.Time.realtimeSinceStartup - m_lastAcquireTime[lockname]) > 5f) : true)
             {
-                lastAcquireTime[lockname] = UnityEngine.Time.realtimeSinceStartup;
+                m_lastAcquireTime[lockname] = UnityEngine.Time.realtimeSinceStartup;
                 AcquireLock(lockname, false);
             }
         }
 
         public void AcquireLock(string lockName, bool force)
         {
-            lock (lockObject)
+            Messages.ClientServer_LockAcquireSend msg = new Messages.ClientServer_LockAcquireSend
             {
-                using (MessageWriter mw = new MessageWriter())
-                {
-                    mw.Write<int>((int)LockMessageType.ACQUIRE);
-                    mw.Write<string>(Settings.Instance.playerName);
-                    mw.Write<string>(lockName);
-                    mw.Write<bool>(force);
-                    NetworkWorker.Instance.SendLockSystemMessage(mw.GetMessageBytes());
-                }
-            }
+                name = lockName,
+                force = force
+            };
+            
+            throw new NotImplementedException();
         }
 
         public void ReleaseLock(string lockName)
         {
-            lock (lockObject)
+            Messages.ClientServer_LockReleaseSend msg = new Messages.ClientServer_LockReleaseSend
             {
-                using (MessageWriter mw = new MessageWriter())
-                {
-                    mw.Write<int>((int)LockMessageType.RELEASE);
-                    mw.Write<string>(Settings.Instance.playerName);
-                    mw.Write<string>(lockName);
-                    NetworkWorker.Instance.SendLockSystemMessage(mw.GetMessageBytes());
-                }
-                if (LockIsOurs(lockName))
-                {
-                    serverLocks.Remove(lockName);
-                }
+                name = lockName
+            };
+
+            if (LockIsOurs(lockName))
+            {
+                m_serverLocks.Remove(lockName);
             }
+            
+            throw new NotImplementedException();
         }
 
         public void ReleasePlayerLocks(string playerName)
         {
-            lock (lockObject)
+            List<string> removeList = new List<string>();
+            foreach (KeyValuePair<string,string> kvp in m_serverLocks)
             {
-                List<string> removeList = new List<string>();
-                foreach (KeyValuePair<string,string> kvp in serverLocks)
+                if (kvp.Value == playerName)
                 {
-                    if (kvp.Value == playerName)
-                    {
-                        removeList.Add(kvp.Key);
-                    }
+                    removeList.Add(kvp.Key);
                 }
-                foreach (string removeValue in removeList)
-                {
-                    serverLocks.Remove(removeValue);
-                    FireReleaseEvent(playerName, removeValue);
-                }
+            }
+            foreach (string removeValue in removeList)
+            {
+                m_serverLocks.Remove(removeValue);
+                ReleaseEvent(playerName, removeValue);
             }
         }
 
         public void ReleasePlayerLocksWithPrefix(string playerName, string prefix)
         {
             DarkLog.Debug("Releasing lock with prefix " + prefix + " for " + playerName);
-            lock (lockObject)
+            List<string> removeList = new List<string>();
+            foreach (KeyValuePair<string,string> kvp in m_serverLocks)
             {
-                List<string> removeList = new List<string>();
-                foreach (KeyValuePair<string,string> kvp in serverLocks)
+                if (kvp.Key.StartsWith(prefix) && kvp.Value == playerName)
                 {
-                    if (kvp.Key.StartsWith(prefix) && kvp.Value == playerName)
-                    {
-                        removeList.Add(kvp.Key);
-                    }
-                }
-                foreach (string removeValue in removeList)
-                {
-                    if (playerName == Settings.Instance.playerName)
-                    {
-                        DarkLog.Debug("Releasing lock " + removeValue);
-                        ReleaseLock(removeValue);
-                    }
-                    else
-                    {
-                        serverLocks.Remove(removeValue);
-                        FireReleaseEvent(playerName, removeValue);
-                    }
+                    removeList.Add(kvp.Key);
                 }
             }
-        }
-
-        public void HandleLockMessage(byte[] messageData)
-        {
-            lock (lockObject)
+            foreach (string removeValue in removeList)
             {
-                using (MessageReader mr = new MessageReader(messageData, false))
+                if (playerName == Client.Instance.Settings.PlayerName)
                 {
-                    LockMessageType lockMessageType = (LockMessageType)mr.Read<int>();
-                    switch (lockMessageType)
-                    {
-                        case LockMessageType.LIST:
-                            {
-                                //We shouldn't need to clear this as LIST is only sent once, but better safe than sorry.
-                                serverLocks.Clear();
-                                string[] lockKeys = mr.Read<string[]>();
-                                string[] lockValues = mr.Read<string[]>();
-                                for (int i = 0; i < lockKeys.Length; i++)
-                                {
-                                    serverLocks.Add(lockKeys[i], lockValues[i]);
-                                }
-                            }
-                            break;
-                        case LockMessageType.ACQUIRE:
-                            {
-                                string playerName = mr.Read<string>();
-                                string lockName = mr.Read<string>();
-                                bool lockResult = mr.Read<bool>();
-                                if (lockResult)
-                                {
-                                    serverLocks[lockName] = playerName;
-                                }
-                                FireAcquireEvent(playerName, lockName, lockResult);
-                            }
-                            break;
-                        case LockMessageType.RELEASE:
-                            {
-                                string playerName = mr.Read<string>();
-                                string lockName = mr.Read<string>();
-                                if (serverLocks.ContainsKey(lockName))
-                                {
-                                    serverLocks.Remove(lockName);
-                                }
-                                FireReleaseEvent(playerName, lockName);
-                            }
-                            break;
-                    }
+                    DarkLog.Debug("Releasing lock " + removeValue);
+                    ReleaseLock(removeValue);
+                }
+                else
+                {
+                    m_serverLocks.Remove(removeValue);
+                    ReleaseEvent(playerName, removeValue);
                 }
             }
-        }
-
-        public void RegisterAcquireHook(AcquireEvent methodObject)
-        {
-            lockAcquireEvents.Add(methodObject);
-        }
-
-        public void UnregisterAcquireHook(AcquireEvent methodObject)
-        {
-            if (lockAcquireEvents.Contains(methodObject))
-            {
-                lockAcquireEvents.Remove(methodObject);
-            }
-        }
-
-        public void RegisterReleaseHook(ReleaseEvent methodObject)
-        {
-            lockReleaseEvents.Add(methodObject);
-        }
-
-        public void UnregisterReleaseHook(ReleaseEvent methodObject)
-        {
-            if (lockReleaseEvents.Contains(methodObject))
-            {
-                lockReleaseEvents.Remove(methodObject);
-            }
-        }
-
-        private void FireAcquireEvent(string playerName, string lockName, bool lockResult)
-        {
-            foreach (AcquireEvent methodObject in lockAcquireEvents)
-            {
-                try
-                {
-                    methodObject(playerName, lockName, lockResult);
-                }
-                catch (Exception e)
-                {
-                    DarkLog.Debug("Error thrown in acquire lock event, exception " + e);
-                }
-            }
-        }
-
-        private void FireReleaseEvent(string playerName, string lockName)
-        {
-            foreach (ReleaseEvent methodObject in lockReleaseEvents)
-            {
-                try
-                {
-                    methodObject(playerName, lockName);
-                }
-                catch (Exception e)
-                {
-                    DarkLog.Debug("Error thrown in release lock event, exception " + e);
-                }
-            } 
         }
 
         public bool LockIsOurs(string lockName)
         {
-            lock (lockObject)
+            if (m_serverLocks.ContainsKey(lockName))
             {
-                if (serverLocks.ContainsKey(lockName))
+                if (m_serverLocks[lockName] == Client.Instance.Settings.PlayerName)
                 {
-                    if (serverLocks[lockName] == Settings.Instance.playerName)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
-                return false;
             }
+            return false;
         }
 
         public bool LockExists(string lockName)
         {
-            lock (lockObject)
-            {
-                return serverLocks.ContainsKey(lockName);
-            }
+            return m_serverLocks.ContainsKey(lockName);
         }
 
         public string LockOwner(string lockName)
         {
-            lock (lockObject)
+            if (m_serverLocks.ContainsKey(lockName))
             {
-                if (serverLocks.ContainsKey(lockName))
-                {
-                    return serverLocks[lockName];
-                }
-                return "";
+                return m_serverLocks[lockName];
             }
+            return "";
+            
         }
 
-        public static void Reset()
+        public void Reset()
         {
-            lock (Client.eventLock)
-            {
-                singleton = new LockSystem();
-            }
+            m_serverLocks.Clear();
         }
     }
 }

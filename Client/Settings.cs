@@ -10,17 +10,16 @@ namespace DarkMultiPlayer
     public class Settings
     {
         //Settings
-        private static Settings singleton = new Settings();
-        public string playerName;
-        public string playerPublicKey;
-        public string playerPrivateKey;
-        public int cacheSize;
-        public int disclaimerAccepted;
-        public List<ServerEntry> servers;
-        public Color playerColor;
-        public KeyCode screenshotKey;
-        public KeyCode chatKey;
-        public string selectedFlag;
+        private string m_playerName;
+        private string m_publicKey;
+        private string m_privateKey;
+        private int cacheSize;
+        private int m_disclaimerAccepted;
+        private List<ServerEntry> servers;
+        private Color playerColor;
+        private KeyCode screenshotKey;
+        private KeyCode chatKey;
+        private string m_flag;
         private const string DEFAULT_PLAYER_NAME = "Player";
         private const string SETTINGS_FILE = "servers.xml";
         private const string PUBLIC_KEY_FILE = "publickey.txt";
@@ -34,13 +33,32 @@ namespace DarkMultiPlayer
         private string backupPublicKeyFile;
         private string backupPrivateKeyFile;
 
-        public static Settings Instance
+        public string PlayerName
         {
-            get
-            {
-                return singleton;
-            }
+            get { return m_playerName; }
         }
+
+        public string PublicKey
+        {
+            get { return m_publicKey; }
+        }
+
+        public string PrivateKey
+        {
+            get { return m_privateKey; }
+        }
+
+        public int DisclaimerAccepted
+        {
+            get { return m_disclaimerAccepted; }
+            set { m_disclaimerAccepted = value; }
+        }
+        
+        public string Flag
+        {
+            get { return m_flag; }
+        }
+
 
         public Settings()
         {
@@ -79,8 +97,8 @@ namespace DarkMultiPlayer
                 }
                 if (!File.Exists(settingsFile))
                 {
-                    xmlDoc.LoadXml(newXMLString());
-                    playerName = DEFAULT_PLAYER_NAME;
+                    xmlDoc.LoadXml(NewXMLString());
+                    m_playerName = DEFAULT_PLAYER_NAME;
                     xmlDoc.Save(settingsFile);
                 }
                 if (!File.Exists(backupSettingsFile))
@@ -89,7 +107,7 @@ namespace DarkMultiPlayer
                     File.Copy(settingsFile, backupSettingsFile);
                 }
                 xmlDoc.Load(settingsFile);
-                playerName = xmlDoc.SelectSingleNode("/settings/global/@username").Value;
+                m_playerName = xmlDoc.SelectSingleNode("/settings/global/@username").Value;
                 try
                 {
                     cacheSize = Int32.Parse(xmlDoc.SelectSingleNode("/settings/global/@cache-size").Value);
@@ -102,7 +120,7 @@ namespace DarkMultiPlayer
                 }
                 try
                 {
-                    disclaimerAccepted = Int32.Parse(xmlDoc.SelectSingleNode("/settings/global/@disclaimer").Value);
+                    m_disclaimerAccepted = Int32.Parse(xmlDoc.SelectSingleNode("/settings/global/@disclaimer").Value);
                 }
                 catch
                 {
@@ -142,14 +160,14 @@ namespace DarkMultiPlayer
                         blueColor = 1f;
                     }
                     playerColor = new Color(redColor, greenColor, blueColor, 1f);
-                    OptionsWindow.Instance.loadEventHandled = false;
+/*                    OptionsWindow.Instance.loadEventHandled = false;*/
                 }
                 catch
                 {
                     DarkLog.Debug("Adding player color to settings file");
                     saveXMLAfterLoad = true;
-                    playerColor = PlayerColorWorker.GenerateRandomColor();
-                    OptionsWindow.Instance.loadEventHandled = false;
+//                     playerColor = PlayerColorWorker.GenerateRandomColor();
+//                     OptionsWindow.Instance.loadEventHandled = false;
                 }
                 try
                 {
@@ -173,13 +191,13 @@ namespace DarkMultiPlayer
                 }
                 try
                 {
-                    selectedFlag = xmlDoc.SelectSingleNode("/settings/global/@selected-flag").Value;
+                    m_flag = xmlDoc.SelectSingleNode("/settings/global/@selected-flag").Value;
                 }
                 catch
                 {
                     DarkLog.Debug("Adding selected flag to settings file");
                     saveXMLAfterLoad = true;
-                    selectedFlag = "Squad/Flags/default";
+                    m_flag = "Squad/Flags/default";
                 }
                 XmlNodeList serverNodeList = xmlDoc.GetElementsByTagName("server");
                 servers = new List<ServerEntry>();
@@ -214,8 +232,8 @@ namespace DarkMultiPlayer
                 //Load or create token file
                 if (File.Exists(privateKeyFile) && File.Exists(publicKeyFile))
                 {
-                    playerPublicKey = File.ReadAllText(publicKeyFile);
-                    playerPrivateKey = File.ReadAllText(privateKeyFile);
+                    m_publicKey = File.ReadAllText(publicKeyFile);
+                    m_privateKey = File.ReadAllText(privateKeyFile);
                 }
                 else
                 {
@@ -246,8 +264,8 @@ namespace DarkMultiPlayer
             {
                 try
                 {
-                    playerPublicKey = rsa.ToXmlString(false);
-                    playerPrivateKey = rsa.ToXmlString(true);
+                    m_publicKey = rsa.ToXmlString(false);
+                    m_privateKey = rsa.ToXmlString(true);
                 }
                 catch (Exception e)
                 {
@@ -259,8 +277,8 @@ namespace DarkMultiPlayer
                     rsa.PersistKeyInCsp = false;
                 }
             }
-            File.WriteAllText(publicKeyFile, playerPublicKey);
-            File.WriteAllText(privateKeyFile, playerPrivateKey);
+            File.WriteAllText(publicKeyFile, m_publicKey);
+            File.WriteAllText(privateKeyFile, m_privateKey);
         }
 
         public void SaveSettings()
@@ -272,9 +290,9 @@ namespace DarkMultiPlayer
             }
             else
             {
-                xmlDoc.LoadXml(newXMLString());
+                xmlDoc.LoadXml(NewXMLString());
             }
-            xmlDoc.SelectSingleNode("/settings/global/@username").Value = playerName;
+            xmlDoc.SelectSingleNode("/settings/global/@username").Value = m_playerName;
             try
             {
                 xmlDoc.SelectSingleNode("/settings/global/@cache-size").Value = cacheSize.ToString();
@@ -287,7 +305,7 @@ namespace DarkMultiPlayer
             }
             try
             {
-                xmlDoc.SelectSingleNode("/settings/global/@disclaimer").Value = disclaimerAccepted.ToString();
+                xmlDoc.SelectSingleNode("/settings/global/@disclaimer").Value = m_disclaimerAccepted.ToString();
             }
             catch
             {
@@ -327,12 +345,12 @@ namespace DarkMultiPlayer
             }
             try
             {
-                xmlDoc.SelectSingleNode("/settings/global/@selected-flag").Value = selectedFlag;
+                xmlDoc.SelectSingleNode("/settings/global/@selected-flag").Value = m_flag;
             }
             catch
             {
                 XmlAttribute selectedFlagAttribute = xmlDoc.CreateAttribute("selected-flag");
-                selectedFlagAttribute.Value = selectedFlag;
+                selectedFlagAttribute.Value = m_flag;
                 xmlDoc.SelectSingleNode("/settings/global").Attributes.Append(selectedFlagAttribute);
             }
             XmlNode serverNodeList = xmlDoc.SelectSingleNode("/settings/servers");
@@ -349,7 +367,7 @@ namespace DarkMultiPlayer
             File.Copy(settingsFile, backupSettingsFile, true);
         }
 
-        private string newXMLString()
+        private string NewXMLString()
         {
             return String.Format("<?xml version=\"1.0\"?><settings><global username=\"{0}\" cache-size=\"{1}\"/><servers></servers></settings>", DEFAULT_PLAYER_NAME, DEFAULT_CACHE_SIZE);
         }

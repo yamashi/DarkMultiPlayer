@@ -6,51 +6,36 @@ namespace DarkMultiPlayer
     //This disclaimer exists because I was contacted by a moderator pointing me to the addon posting rules.
     public class DisclaimerWindow
     {
-        public static DisclaimerWindow singleton;
         private const int WINDOW_WIDTH = 500;
         private const int WINDOW_HEIGHT = 300;
-        private Rect windowRect;
-        private Rect moveRect;
-        private bool initialized;
-        private bool display;
-        private GUILayoutOption[] layoutOptions;
-
-        public static DisclaimerWindow Instance
-        {
-            get
-            {
-                return singleton;
-            }
-        }
+        private Rect m_windowRect;
+        private Rect m_moveRect;
+        private bool m_display;
+        private GUILayoutOption[] m_layoutOptions;
 
         private void InitGUI()
         {
             //Setup GUI stuff
-            windowRect = new Rect((Screen.width / 2f) - (WINDOW_WIDTH / 2), (Screen.height / 2f) - (WINDOW_HEIGHT / 2f), WINDOW_WIDTH, WINDOW_HEIGHT);
-            moveRect = new Rect(0, 0, 10000, 20);
+            m_windowRect = new Rect((Screen.width / 2f) - (WINDOW_WIDTH / 2), (Screen.height / 2f) - (WINDOW_HEIGHT / 2f), WINDOW_WIDTH, WINDOW_HEIGHT);
+            m_moveRect = new Rect(0, 0, 10000, 20);
 
-            layoutOptions = new GUILayoutOption[2];
-            layoutOptions[0] = GUILayout.ExpandWidth(true);
-            layoutOptions[1] = GUILayout.ExpandHeight(true);
+            m_layoutOptions = new GUILayoutOption[2];
+            m_layoutOptions[0] = GUILayout.ExpandWidth(true);
+            m_layoutOptions[1] = GUILayout.ExpandHeight(true);
         }
 
         private void Draw()
         {
-            if (!initialized)
+            if (m_display)
             {
-                initialized = true;
-                InitGUI();
-            }
-            if (display)
-            {
-                windowRect = GUILayout.Window(6713 + Client.WINDOW_OFFSET, windowRect, DrawContent, "DarkMultiPlayer - Disclaimer", layoutOptions);
+                m_windowRect = GUILayout.Window(6713 + Client.WINDOW_OFFSET, m_windowRect, DrawContent, "DarkMultiPlayer - Disclaimer", m_layoutOptions);
             }
         }
 
         private void DrawContent(int windowID)
         {
             GUILayout.BeginVertical();
-            GUI.DragWindow(moveRect);
+            GUI.DragWindow(m_moveRect);
             string disclaimerText = "DarkMultiPlayer shares the following possibly personally identifiable information with any server you connect to.\n";
             disclaimerText += "a) Your player name you connect with.\n";
             disclaimerText += "b) Your player token (A randomly generated string to authenticate you).\n";
@@ -69,26 +54,24 @@ namespace DarkMultiPlayer
             if (GUILayout.Button("I accept - Enable DarkMultiPlayer"))
             {
                 DarkLog.Debug("User accepted disclaimer - Enabling DarkMultiPlayer");
-                display = false;
-                Settings.Instance.disclaimerAccepted = 1;
-                Client.Instance.modDisabled = false;
-                Settings.Instance.SaveSettings();
+                m_display = false;
+                Client.Instance.Settings.DisclaimerAccepted = 1;
+                Client.Instance.DisableMod = false;
+                Client.Instance.Settings.SaveSettings();
             }
             if (GUILayout.Button("I decline - Disable DarkMultiPlayer"))
             {
                 DarkLog.Debug("User declined disclaimer - Disabling DarkMultiPlayer");
-                display = false;
+                m_display = false;
             }
             GUILayout.EndVertical();
         }
 
-        public static void Enable()
+        public void Enable()
         {
-            singleton = new DisclaimerWindow();
-            lock (Client.eventLock) {
-                Client.drawEvent.Add(singleton.Draw);
-            }
-            singleton.display = true;
+            Client.Instance.DrawEvent += this.Draw;
+            InitGUI();
+            m_display = true;
         }
     }
 }

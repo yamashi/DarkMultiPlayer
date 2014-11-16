@@ -5,10 +5,8 @@ namespace DarkMultiPlayer
 {
     public class ModWindow
     {
-        public bool display;
-        private bool safeDisplay;
+        private bool m_display;
         private bool initialized;
-        private static ModWindow singleton = new ModWindow();
         private Rect windowRect;
         private Rect moveRect;
         private GUIStyle windowStyle;
@@ -21,21 +19,12 @@ namespace DarkMultiPlayer
         private const float WINDOW_HEIGHT = 400;
         private const float WINDOW_WIDTH = 600;
 
+        public string FailureText { get; set; }
+
         public ModWindow()
         {
-            lock (Client.eventLock)
-            {
-                Client.updateEvent.Add(this.Update);
-                Client.drawEvent.Add(this.Draw);
-            }
-        }
-
-        public static ModWindow Instance
-        {
-            get
-            {
-                return singleton;
-            }
+            Client.Instance.UpdateEvent += this.Update;
+            Client.Instance.DrawEvent += this.Draw;
         }
 
         private void InitGUI()
@@ -60,7 +49,6 @@ namespace DarkMultiPlayer
 
         private void Update()
         {
-            safeDisplay = display;
         }
 
         public void Draw()
@@ -70,7 +58,7 @@ namespace DarkMultiPlayer
                 initialized = true;
                 InitGUI();
             }
-            if (safeDisplay)
+            if (m_display)
             {
                 windowRect = GUILayout.Window(6706 + Client.WINDOW_OFFSET, windowRect, DrawContent, "DarkMultiPlayer - Mod Control", windowStyle, layoutOptions);
             }
@@ -82,13 +70,25 @@ namespace DarkMultiPlayer
             GUI.DragWindow(moveRect);
             GUILayout.Label("Failed mod validation", labelStyle);
             scrollPos = GUILayout.BeginScrollView(scrollPos, scrollStyle);
-            GUILayout.Label(ModWorker.Instance.failText, labelStyle);
+
+            GUILayout.Label(FailureText, labelStyle);
+
             GUILayout.EndScrollView();
             if (GUILayout.Button("Close", buttonStyle))
             {
-                display = false;
+                m_display = false;
             }
             GUILayout.EndVertical();
+        }
+
+        public void Show()
+        {
+            m_display = true;
+        }
+
+        public void Hide()
+        {
+            m_display = false;
         }
     }
 }

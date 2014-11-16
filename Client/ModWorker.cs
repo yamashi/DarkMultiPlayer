@@ -8,28 +8,12 @@ namespace DarkMultiPlayer
 {
     public class ModWorker
     {
-        private static ModWorker singleton = new ModWorker();
         public ModControlMode modControl = ModControlMode.ENABLED_STOP_INVALID_PART_SYNC;
-        public bool dllListBuilt = false;
         //Dll files, built at startup
-        private Dictionary<string, string> dllList;
+        private Dictionary<string, string> m_moduleList;
         //Accessed from ModWindow
-        private List<string> allowedParts;
-        private string lastModFileData = "";
-
-        public string failText
-        {
-            private set;
-            get;
-        }
-
-        public static ModWorker Instance
-        {
-            get
-            {
-                return singleton;
-            }
-        }
+        private List<string> m_allowedParts;
+        private string m_lastModFileData = "";
 
         private bool CheckFile(string relativeFileName, string referencefileHash)
         {
@@ -43,9 +27,9 @@ namespace DarkMultiPlayer
             return true;
         }
 
-        public void BuildDllFileList()
+        public void BuildModuleList()
         {
-            dllList = new Dictionary<string, string>();
+            m_moduleList = new Dictionary<string, string>();
             string[] checkList = Directory.GetFiles(Path.Combine(KSPUtil.ApplicationRootPath, "GameData"), "*", SearchOption.AllDirectories);
 
             foreach (string checkFile in checkList)
@@ -59,7 +43,7 @@ namespace DarkMultiPlayer
                     //Make it lowercase so we don't worry about case sensitivity.
                     string relativeFilePath = checkFile.ToLowerInvariant().Substring(checkFile.ToLowerInvariant().IndexOf("gamedata") + 9).Replace('\\', '/');
                     string fileHash = Common.CalculateSHA256Hash(checkFile);
-                    dllList.Add(relativeFilePath, fileHash);
+                    m_moduleList.Add(relativeFilePath, fileHash);
                     DarkLog.Debug("Hashed file: " + relativeFilePath + ", hash: " + fileHash);
                 }
             }
@@ -73,13 +57,13 @@ namespace DarkMultiPlayer
             }
             bool modCheckOk = true;
             //Save mod file so we can recheck it.
-            lastModFileData = modFileData;
+            m_lastModFileData = modFileData;
             //Err...
             string tempModFilePath = Path.Combine(Path.Combine(Path.Combine(Path.Combine(Path.Combine(KSPUtil.ApplicationRootPath, "GameData"), "DarkMultiPlayer"), "Plugins"), "Data"), "DMPModControl.txt");
             using (StreamWriter sw = new StreamWriter(tempModFilePath))
             {
                 sw.WriteLine("#This file is downloaded from the server during connection. It is saved here for convenience.");
-                sw.WriteLine(lastModFileData);
+                sw.WriteLine(m_lastModFileData);
             }
 
             //Parse
@@ -263,7 +247,7 @@ namespace DarkMultiPlayer
                 else
                 {
                     //DLL entries are cached from startup.
-                    if (!dllList.ContainsKey(requiredEntry.Key))
+                    if (!m_moduleList.ContainsKey(requiredEntry.Key))
                     {
                         modCheckOk = false;
                         DarkLog.Debug("Required file " + requiredEntry.Key + " is missing!");
@@ -272,7 +256,7 @@ namespace DarkMultiPlayer
                     }
                     if (requiredEntry.Value != "")
                     {
-                        if (dllList[requiredEntry.Key] != requiredEntry.Value)
+                        if (m_moduleList[requiredEntry.Key] != requiredEntry.Value)
                         {
                             modCheckOk = false;
                             DarkLog.Debug("Required file " + requiredEntry.Key + " does not match hash " + requiredEntry.Value + "!");
@@ -311,14 +295,14 @@ namespace DarkMultiPlayer
                 else
                 {
                     //DLL entries are cached from startup.
-                    if (!dllList.ContainsKey(optionalEntry.Key))
+                    if (!m_moduleList.ContainsKey(optionalEntry.Key))
                     {
                         //File is optional, nothing to check if it doesn't exist.
                         continue;
                     }
                     if (optionalEntry.Value != "")
                     {
-                        if (dllList[optionalEntry.Key] != optionalEntry.Value)
+                        if (m_moduleList[optionalEntry.Key] != optionalEntry.Value)
                         {
                             modCheckOk = false;
                             DarkLog.Debug("Optional file " + optionalEntry.Key + " does not match hash " + optionalEntry.Value + "!");
@@ -335,7 +319,7 @@ namespace DarkMultiPlayer
                 autoAllowed.Add("darkmultiplayer/plugins/darkmultiplayer.dll");
                 autoAllowed.Add("darkmultiplayer/plugins/darkmultiplayer-common.dll");
                 autoAllowed.Add("darkmultiplayer/plugins/messagewriter.dll");
-                foreach (KeyValuePair<string, string> dllResource in dllList)
+                foreach (KeyValuePair<string, string> dllResource in m_moduleList)
                 {
                     //Allow DMP files
                     if (autoAllowed.Contains(dllResource.Key))
@@ -367,7 +351,7 @@ namespace DarkMultiPlayer
                 //Check Resource blacklist
                 foreach (string blacklistEntry in parseWhiteBlackList)
                 {
-                    if (dllList.ContainsKey(blacklistEntry.ToLowerInvariant()))
+                    if (m_moduleList.ContainsKey(blacklistEntry.ToLowerInvariant()))
                     {
                         modCheckOk = false;
                         DarkLog.Debug("Banned resource " + blacklistEntry + " exists on client!");
@@ -377,11 +361,12 @@ namespace DarkMultiPlayer
             }
             if (!modCheckOk)
             {
-                failText = sb.ToString();
-                ModWindow.Instance.display = true;
+                Client.Instance.ModWindow.FailureText = sb.ToString();
+                Client.Instance.ModWindow.Show();
+
                 return false;
             }
-            allowedParts = parsePartsList;
+            m_allowedParts = parsePartsList;
             DarkLog.Debug("Mod check passed!");
             return true;
         }
@@ -389,7 +374,7 @@ namespace DarkMultiPlayer
         public List<string> GetAllowedPartsList()
         {
             //Return a copy
-            return new List<string>(allowedParts);
+            return new List<string>(m_allowedParts);
         }
 
         public void GenerateModControlFile(bool whitelistMode)

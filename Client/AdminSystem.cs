@@ -8,70 +8,28 @@ namespace DarkMultiPlayer
 {
     public class AdminSystem
     {
-        private static AdminSystem singleton;
-        private List<string> serverAdmins = new List<string>();
-        private object adminLock = new object();
-
-        public static AdminSystem fetch
-        {
-            get
-            {
-                return singleton;
-            }
-        }
+        private List<string> m_serverAdmins = new List<string>();
 
         public void HandleAdminMessage(byte[] messageData)
         {
-            using (MessageReader mr = new MessageReader(messageData, false))
-            {
-                AdminMessageType messageType = (AdminMessageType)mr.Read<int>();
-                switch (messageType)
-                {
-                    case AdminMessageType.LIST:
-                        {
-                            string[] adminNames = mr.Read<string[]>();
-                            foreach (string adminName in adminNames)
-                            {
-                                RegisterServerAdmin(adminName);
-                            }
-                        }
-                        break;
-                    case AdminMessageType.ADD:
-                        {
-                            string adminName = mr.Read<string>();
-                            RegisterServerAdmin(adminName);
-                        }
-                        break;
-                    case AdminMessageType.REMOVE:
-                        {
-                            string adminName = mr.Read<string>();
-                            UnregisterServerAdmin(adminName);
-                        }
-                        break;
-                }
-            }
+            throw new NotImplementedException();
         }
 
         private void RegisterServerAdmin(string adminName)
         {
-            lock (adminLock)
+            if (!m_serverAdmins.Contains(adminName))
             {
-                if (!serverAdmins.Contains(adminName))
-                {
-                    serverAdmins.Add(adminName);
-                }
+                m_serverAdmins.Add(adminName);
             }
+            
         }
 
         private void UnregisterServerAdmin(string adminName)
         {
-            lock (adminLock)
+            if (m_serverAdmins.Contains(adminName))
             {
-                if (serverAdmins.Contains(adminName))
-                {
-                    serverAdmins.Remove(adminName);
-                }
-            }
+                m_serverAdmins.Remove(adminName);
+            } 
         }
 
         /// <summary>
@@ -80,7 +38,7 @@ namespace DarkMultiPlayer
         /// <returns><c>true</c> if the current player is admin; otherwise, <c>false</c>.</returns>
         public bool IsAdmin()
         {
-            return IsAdmin(Settings.Instance.playerName);
+            return IsAdmin(Client.Instance.Settings.PlayerName);
         }
 
         /// <summary>
@@ -90,18 +48,12 @@ namespace DarkMultiPlayer
         /// <param name="playerName">Player name to check for admin.</param>
         public bool IsAdmin(string playerName)
         {
-            lock (adminLock)
-            {
-                return serverAdmins.Contains(playerName);
-            }
+            return m_serverAdmins.Contains(playerName);
         }
 
-        public static void Reset()
+        public void Reset()
         {
-            lock (Client.eventLock)
-            {
-                singleton = new AdminSystem();
-            }
+            m_serverAdmins = new List<string>();
         }
     }
 }

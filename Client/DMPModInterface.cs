@@ -28,11 +28,8 @@ namespace DarkMultiPlayer
 
         public DMPModInterface()
         {
-            lock (Client.eventLock)
-            {
-                Client.updateEvent.Add(this.Update);
-                Client.fixedUpdateEvent.Add(this.FixedUpdate);
-            }
+            Client.Instance.UpdateEvent += this.Update;
+            Client.Instance.FixedUpdateEvent += this.FixedUpdate;
         }
 
         public static DMPModInterface Instance
@@ -156,14 +153,8 @@ namespace DarkMultiPlayer
                 DarkLog.Debug(modName + " attemped to send a null message");
                 return;
             }
-            using (MessageWriter mw = new MessageWriter())
-            {
-                mw.Write<string>(modName);
-                mw.Write<bool>(relay);
-                mw.Write<bool>(highPriority);
-                mw.Write<byte[]>(messageData);
-                NetworkWorker.Instance.SendModMessage(mw.GetMessageBytes(), highPriority);
-            }
+
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -171,12 +162,7 @@ namespace DarkMultiPlayer
         /// </summary>
         public void HandleModData(byte[] messageData)
         {
-            using (MessageReader mr = new MessageReader(messageData, false))
-            {
-                string modName = mr.Read<string>();
-                byte[] modData = mr.Read<byte[]>();
-                OnModMessageReceived(modName, modData);
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
