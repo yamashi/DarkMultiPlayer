@@ -35,6 +35,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncConsoleReader.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="EventAggregator.cs" />
     <Compile Include="EventHandler.cs" />
@@ -44,6 +45,7 @@
     <Compile Include="IMessage.cs" />
     <Compile Include="IMessageFactory.cs" />
     <Compile Include="IRegisterable.cs" />
+    <Compile Include="SafeList.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

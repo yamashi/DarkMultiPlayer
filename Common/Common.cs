@@ -507,7 +507,7 @@ namespace DarkMultiPlayerCommon
         SCREENSHOT,
     }
 
-    public enum ChatMessageType
+    public enum ChatMessageType : byte
     {
         LIST,
         JOIN,
