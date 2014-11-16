@@ -48,10 +48,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientServer_Struct.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="ConfigNodeSerializer.cs" />
+    <Compile Include="ServerClient_Struct.cs" />
     <Compile Include="VesselWorker.cs" />
     <Compile Include="TimeSyncer.cs" />
     <Compile Include="NetworkWorker.cs" />
