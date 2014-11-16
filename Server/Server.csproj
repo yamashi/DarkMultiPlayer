@@ -41,12 +41,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BanList.cs" />
+    <Compile Include="ClientServer_Struct.cs" />
     <Compile Include="GameServer.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="CommandHandler.cs" />
-    <Compile Include="ClientHandler.cs" />
+    <Compile Include="WorldManager.cs" />
     <Compile Include="ScreenshotExpire.cs" />
-    <Compile Include="ServerClient_Struct.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Dekessler.cs" />

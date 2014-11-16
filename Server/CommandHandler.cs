@@ -1,47 +1,33 @@
 using System;
 using System.Threading;
 using System.Collections.Generic;
+using DarkMultiPlayerCommon;
 
 namespace DarkMultiPlayerServer
 {
     public class CommandHandler
     {
-        private static Dictionary<string, Command> commands = new Dictionary<string, Command>();
+        private Dictionary<string, Command> m_commands = new Dictionary<string, Command>();
 
-        public static void ThreadMain()
+        public CommandHandler()
         {
-            try
-            {
-                //Register commands
-                CommandHandler.RegisterCommand("help", CommandHandler.DisplayHelp, "Displays this help");
-                CommandHandler.RegisterCommand("say", CommandHandler.Say, "Broadcasts a message to clients");
-                CommandHandler.RegisterCommand("dekessler", Dekessler.RunDekessler, "Clears out debris from the server");
-                CommandHandler.RegisterCommand("nukeksc", NukeKSC.RunNukeKSC, "Clears ALL vessels from KSC and the Runway");
-                CommandHandler.RegisterCommand("listclients", ListClients, "Lists connected clients");
-                CommandHandler.RegisterCommand("countclients", CountClients, "Counts connected clients");
-                CommandHandler.RegisterCommand("connectionstats", ConnectionStats, "Displays network traffic usage");
+            AsyncConsoleReader.Initialize();
 
-                //Main loop
-                while (Server.serverRunning)
+            RegisterCommand("help", DisplayHelp, "Displays this help");
+            RegisterCommand("say", Say, "Broadcasts a message to clients");
+            RegisterCommand("dekessler", Dekessler.RunDekessler, "Clears out debris from the server");
+            RegisterCommand("nukeksc", NukeKSC.RunNukeKSC, "Clears ALL vessels from KSC and the Runway");
+            RegisterCommand("listclients", ListClients, "Lists connected clients");
+            RegisterCommand("countclients", CountClients, "Counts connected clients");
+        }
+
+        public void Run()
+        {
+            string input = AsyncConsoleReader.ReadLine();
+            while (input != "")
+            {
+                try
                 {
-                    string input = "";
-                    try
-                    {
-                        input = Console.ReadLine();
-                        if (input == null)
-                        {
-                            DarkLog.Debug("Terminal may be not attached or broken, Exiting out of command handler");
-                            return;
-                        }
-                    }
-                    catch
-                    {
-                        if (Server.serverRunning)
-                        {
-                            DarkLog.Debug("Ignored mono Console.ReadLine() bug");
-                        }
-                        Thread.Sleep(500);
-                    }
                     DarkLog.Normal("Command input: " + input);
                     if (input.StartsWith("/"))
                     {
@@ -51,22 +37,26 @@ namespace DarkMultiPlayerServer
                     {
                         if (input != "")
                         {
-                            commands["say"].func(input);
+                            m_commands["say"].func(input);
                         }
+                    }
+
+                    input = AsyncConsoleReader.ReadLine();
+
+                }
+                catch (Exception e)
+                {
+                    if (Server.serverRunning)
+                    {
+                        DarkLog.Fatal("Error in command handler thread, Exception: " + e);
+                        throw;
                     }
                 }
             }
-            catch (Exception e)
-            {
-                if (Server.serverRunning)
-                {
-                    DarkLog.Fatal("Error in command handler thread, Exception: " + e);
-                    throw;
-                }
-            }
+
         }
 
-        public static void HandleServerInput(string input)
+        public void HandleServerInput(string input)
         {
             string commandPart = input;
             string argumentPart = "";
@@ -80,11 +70,11 @@ namespace DarkMultiPlayerServer
             }
             if (commandPart.Length > 0)
             {
-                if (commands.ContainsKey(commandPart))
+                if (m_commands.ContainsKey(commandPart))
                 {
                     try
                     {
-                        commands[commandPart].func(argumentPart);
+                        m_commands[commandPart].func(argumentPart);
                     }
                     catch (Exception e)
                     {
@@ -98,20 +88,20 @@ namespace DarkMultiPlayerServer
             }
         }
 
-        public static void RegisterCommand(string command, Action<string> func, string description)
+        public void RegisterCommand(string command, Action<string> func, string description)
         {
             Command cmd = new Command(command, func, description);
-            if (!commands.ContainsKey(command))
+            if (!m_commands.ContainsKey(command))
             {
-                commands.Add(command, cmd);
+                m_commands.Add(command, cmd);
             }
         }
 
-        private static void DisplayHelp(string commandArgs)
+        private void DisplayHelp(string commandArgs)
         {
             List<Command> commands = new List<Command>();
             int longestName = 0;
-            foreach (Command cmd in CommandHandler.commands.Values)
+            foreach (Command cmd in m_commands.Values)
             {
                 commands.Add(cmd);
                 if (cmd.name.Length > longestName)
@@ -129,7 +119,14 @@ namespace DarkMultiPlayerServer
         private static void Say(string sayText)
         {
             DarkLog.Normal("Broadcasting " + sayText);
-            ClientHandler.SendChatMessageToAll(sayText);
+
+            Messages.ServerClient_ChatMessageSend msg = new Messages.ServerClient_ChatMessageSend();
+            msg.message = sayText;
+            msg.name = Settings.settingsStore.consoleIdentifier;
+            msg.channel = "";
+            msg.type = (byte)ChatMessageType.CHANNEL_MESSAGE;
+
+            WorldManager.Instance.Broadcast(msg);
         }
 
         private static void ListClients(string commandArgs)
@@ -147,26 +144,6 @@ namespace DarkMultiPlayerServer
         private static void CountClients(string commandArgs)
         {
             DarkLog.Normal("Online players: " + Server.playerCount);
-        }
-
-        private static void ConnectionStats(string commandArgs)
-        {
-            //Do some shit here.
-            long bytesQueuedOutTotal = 0;
-            long bytesSentTotal = 0;
-            long bytesReceivedTotal = 0;
-            DarkLog.Normal("Connection stats:");
-            foreach (ClientObject client in ClientHandler.GetClients())
-            {
-                if (client.authenticated)
-                {
-                    bytesQueuedOutTotal += client.bytesQueuedOut;
-                    bytesSentTotal += client.bytesSent;
-                    bytesReceivedTotal += client.bytesReceived;
-                    DarkLog.Normal("Player '" + client.playerName + "', queued out: " + client.bytesQueuedOut + ", sent: " + client.bytesSent + ", received: " + client.bytesReceived);
-                }
-            }
-            DarkLog.Normal("Server, queued out: " + bytesQueuedOutTotal + ", sent: " + bytesSentTotal + ", received: " + bytesReceivedTotal);
         }
 
         private class Command : IComparable

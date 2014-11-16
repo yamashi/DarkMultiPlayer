@@ -68,5 +68,43 @@ namespace DarkMultiPlayerServer
                 File.Create(publicKeyBanlistFile);
             }
         }
+
+        public void Save()
+        {
+
+        }
+
+        public void AddName(string aName)
+        {
+            if (!m_bannedNames.Contains(aName))
+                m_bannedNames.Add(aName);
+        }
+
+        public void AddIp(IPAddress aAddress)
+        {
+            if (!m_bannedIps.Contains(aAddress))
+                m_bannedIps.Add(aAddress);
+        }
+
+        public void AddKey(string aKey)
+        {
+            if (!m_bannedPublicKeys.Contains(aKey))
+                m_bannedPublicKeys.Add(aKey);
+        }
+
+        public void RemoveName(string aName)
+        {
+            m_bannedNames.Remove(aName);
+        }
+
+        public void RemoveIp(IPAddress aAddress)
+        {
+            m_bannedIps.Remove(aAddress);
+        }
+
+        public void RemoveKey(string aKey)
+        {
+            m_bannedPublicKeys.Remove(aKey);
+        }
     }
 }

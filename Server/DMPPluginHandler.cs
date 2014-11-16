@@ -227,17 +227,15 @@ namespace DarkMultiPlayerServer
         }
 
         //Fire OnMessageReceived
-        public static void FireOnMessageReceived(ClientObject client, ClientMessage message)
+        public static bool FireOnMessageReceived(IMessage message)
         {
             bool handledByAny = false;
             foreach (var plugin in loadedPlugins)
             {
                 try
                 {
-                    plugin.OnMessageReceived(client, message);
-
                     //prevent plugins from unhandling other plugin's handled requests
-                    if (message.handled)
+                    if (plugin.OnMessageReceived(message))
                     {
                         handledByAny = true;
                     }
@@ -248,7 +246,7 @@ namespace DarkMultiPlayerServer
                     DarkLog.Debug("Error thrown in OnMessageReceived event for " + type.FullName + " (" + type.Assembly.FullName + "), Exception: " + e);
                 }
             }
-            message.handled = handledByAny;
+            return handledByAny;
         }
     }
 }

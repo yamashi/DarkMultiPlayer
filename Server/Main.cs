@@ -44,18 +44,20 @@ namespace DarkMultiPlayerServer
                 universeDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Universe");
                 modFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DMPModControl.txt");
 
+                CommandHandler commandHandler = new CommandHandler();
+
                 //Register the server commands
-                CommandHandler.RegisterCommand("exit", Server.ShutDown, "Shuts down the server");
-                CommandHandler.RegisterCommand("quit", Server.ShutDown, "Shuts down the server");
-                CommandHandler.RegisterCommand("shutdown", Server.ShutDown, "Shuts down the server");
-                CommandHandler.RegisterCommand("restart", Server.Restart, "Restarts the server");
-                CommandHandler.RegisterCommand("kick", ClientHandler.KickPlayer, "Kicks a player from the server");
-                CommandHandler.RegisterCommand("ban", ClientHandler.BanPlayer, "Bans a player from the server");
-                CommandHandler.RegisterCommand("banip", ClientHandler.BanIP, "Bans an IP Address from the server");
-                CommandHandler.RegisterCommand("bankey", ClientHandler.BanPublicKey, "Bans a Guid from the server");
-                CommandHandler.RegisterCommand("pm", ClientHandler.PMCommand, "Sends a message to a player");
-                CommandHandler.RegisterCommand("admin", ClientHandler.AdminCommand, "Sets a player as admin/removes admin from the player");
-                CommandHandler.RegisterCommand("whitelist", ClientHandler.WhitelistCommand, "Change the server whitelist");
+                commandHandler.RegisterCommand("exit", Server.ShutDown, "Shuts down the server");
+                commandHandler.RegisterCommand("quit", Server.ShutDown, "Shuts down the server");
+                commandHandler.RegisterCommand("shutdown", Server.ShutDown, "Shuts down the server");
+                commandHandler.RegisterCommand("restart", Server.Restart, "Restarts the server");
+                commandHandler.RegisterCommand("kick", x => WorldManager.Instance.KickPlayer(x), "Kicks a player from the server");
+                commandHandler.RegisterCommand("ban", x => WorldManager.Instance.BanPlayer(x), "Bans a player from the server");
+                commandHandler.RegisterCommand("banip", x => WorldManager.Instance.BanIP(x), "Bans an IP Address from the server");
+                commandHandler.RegisterCommand("bankey", x => WorldManager.Instance.BanPublicKey(x), "Bans a Guid from the server");
+                commandHandler.RegisterCommand("pm", x => WorldManager.Instance.PMCommand(x), "Sends a message to a player");
+                commandHandler.RegisterCommand("admin", x => WorldManager.Instance.AdminCommand(x), "Sets a player as admin/removes admin from the player");
+                commandHandler.RegisterCommand("whitelist", x => WorldManager.Instance.WhitelistCommand(x), "Change the server whitelist");
                 //Register the ctrl+c event
                 Console.CancelKeyPress += new ConsoleCancelEventHandler(CatchExit);
                 serverStarting = true;
@@ -87,15 +89,9 @@ namespace DarkMultiPlayerServer
 
                     DarkLog.Normal("Starting " + Settings.settingsStore.warpMode + " server on port " + Settings.settingsStore.port + "... ");
 
+                    
+
                     serverRunning = true;
-                    Thread commandThread = new Thread(new ThreadStart(CommandHandler.ThreadMain));
-                    Thread clientThread = new Thread(new ThreadStart(ClientHandler.ThreadMain));
-                    commandThread.Start();
-                    clientThread.Start();
-                    while (serverStarting)
-                    {
-                        Thread.Sleep(500);
-                    }
                     DarkLog.Normal("Done!");
 
                     StartHTTPServer();
@@ -103,6 +99,9 @@ namespace DarkMultiPlayerServer
                     DMPPluginHandler.FireOnServerStart();
                     while (serverRunning)
                     {
+                        WorldManager.Instance.Update();
+                        commandHandler.Run();
+
                         //Run a garbage collection every 2 minutes.
                         if ((serverClock.ElapsedMilliseconds - lastGarbageCollect) > 12000)
                         {
@@ -115,11 +114,9 @@ namespace DarkMultiPlayerServer
                             lastScreenshotExpiredCheck = serverClock.ElapsedMilliseconds;
                             ScreenshotExpire.ExpireCache();
                         }
-                        Thread.Sleep(500);
+                        Thread.Sleep(10);
                     }
                     DMPPluginHandler.FireOnServerStop();
-                    commandThread.Abort();
-                    clientThread.Join();
                 }
                 DarkLog.Normal("Goodbye!");
                 Environment.Exit(0);
@@ -228,12 +225,12 @@ namespace DarkMultiPlayerServer
             if (commandArgs != "")
             {
                 DarkLog.Normal("Shutting down - " + commandArgs);
-                ClientHandler.SendConnectionEndToAll("Server is shutting down - " + commandArgs);
+                WorldManager.Instance.KickAll("Server is shutting down - " + commandArgs);
             }
             else
             {
                 DarkLog.Normal("Shutting down");
-                ClientHandler.SendConnectionEndToAll("Server is shutting down");
+                WorldManager.Instance.KickAll("Server is shutting down");
             }
             serverStarting = false;
             serverRunning = false;
@@ -245,12 +242,12 @@ namespace DarkMultiPlayerServer
             if (commandArgs != "")
             {
                 DarkLog.Normal("Restarting - " + commandArgs);
-                ClientHandler.SendConnectionEndToAll("Server is restarting - " + commandArgs);
+                WorldManager.Instance.KickAll("Server is restarting - " + commandArgs);
             }
             else
             {
                 DarkLog.Normal("Restarting");
-                ClientHandler.SendConnectionEndToAll("Server is restarting");
+                WorldManager.Instance.KickAll("Server is restarting");
             }
             serverRestarting = true;
             serverStarting = false;

@@ -44,19 +44,15 @@ namespace DarkMultiPlayerServer
                         {
                             File.Delete(vesselFile);
                         }
-                        //Send a vessel remove message
-                        ServerMessage newMessage = new ServerMessage();
-                        newMessage.type = ServerMessageType.VESSEL_REMOVE;
-                        using (MessageWriter mw = new MessageWriter())
+
+                        Messages.ServerClient_VesselRemoveSend msg = new Messages.ServerClient_VesselRemoveSend
                         {
-                            //Send it with a delete time of 0 so it shows up for all players.
-                            mw.Write<int>(0);
-                            mw.Write<double>(0);
-                            mw.Write<string>(vesselID);
-                            mw.Write<bool>(false);
-                            newMessage.data = mw.GetMessageBytes();
-                        }
-                        ClientHandler.SendToAll(null, newMessage, false);
+                            subspace = 0,
+                            clock = 0.0,
+                            name = vesselID,
+                            unk = false
+                        };
+                        WorldManager.Instance.Broadcast(msg);
                         numberOfRemovals++;
                         DarkLog.Debug("Removed debris vessel " + vesselID);
                     }

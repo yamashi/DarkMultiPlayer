@@ -18,18 +18,18 @@ namespace DarkMultiPlayerServer
     }
     class GameServer : GameNetwork
     {
-        private BanList m_banList = null;
         private NetServer m_server = null;
         private readonly Dictionary<long, NetConnection> m_connections = null;
 
-        public BanList BanList
+        public enum SendType
         {
-            get { return m_banList; }
+            KOrdered,
+            KUnordered,
+            KUnreliable
         }
 
         public GameServer(int aPort, IMessageFactory aFactory) : base(aFactory)
         {
-            m_banList = new BanList();
             m_server = StartServer(aPort);
             m_connections = new Dictionary<long, NetConnection>();
         }
@@ -100,6 +100,54 @@ namespace DarkMultiPlayerServer
         private void HandleConnectionChallenge(NetIncomingMessage aMessage)
         {
 
+        }
+
+        public void Broadcast(IMessage aMessage)
+        {
+            m_server.SendToAll(Pack(aMessage), NetDeliveryMethod.ReliableOrdered);
+        }
+
+        public void BroadcastBut(IMessage aMessage, long aId)
+        {
+            NetConnection connection;
+            if (m_connections.TryGetValue(aId, out connection))
+            {
+                m_server.SendToAll(Pack(aMessage), connection, NetDeliveryMethod.ReliableOrdered, 0);
+            }
+            else 
+            {
+                Broadcast(aMessage);
+            }
+        }
+
+        public void SendTo(IMessage aMessage, long aId, SendType aSendType = SendType.KOrdered, int aChannel = 0)
+        {
+            NetConnection connection;
+            if (m_connections.TryGetValue(aId, out connection))
+            {
+                NetDeliveryMethod method =  aSendType == SendType.KOrdered ? NetDeliveryMethod.ReliableOrdered :
+                                            aSendType == SendType.KUnordered ? NetDeliveryMethod.ReliableUnordered :
+                                            NetDeliveryMethod.Unreliable;
+
+                connection.SendMessage(Pack(aMessage), method, aChannel);
+            }
+        }
+
+        public void Kick(long aId, string aReason)
+        {
+            NetConnection connection;
+            if (m_connections.TryGetValue(aId, out connection))
+            {
+                connection.Disconnect(aReason);
+            }
+        }
+
+        public void KickAll(string aReason)
+        {
+            foreach(var pair in m_connections)
+            {
+                pair.Value.Disconnect(aReason);
+            }
         }
     }
 }

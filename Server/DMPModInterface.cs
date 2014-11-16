@@ -14,7 +14,7 @@ namespace DarkMultiPlayerServer
     public class DMPModInterface
     {
         private static Dictionary<string, DMPMessageCallback> registeredMods = new Dictionary<string, DMPMessageCallback>();
-        private static object eventLock = new object();
+        private static readonly object eventLock = new object();
 
         /// <summary>
         /// Registers a mod handler function that will be called as soon as the message is received.
@@ -55,7 +55,7 @@ namespace DarkMultiPlayerServer
             return unregistered;
         }
 
-        public static void SendDMPModMessageToClient(ClientObject client, string modName, byte[] messageData, bool highPriority)
+        public static void SendDMPModMessageToClient(ClientObject client, string modName, byte[] messageData)
         {
             if (modName == null)
             {
@@ -67,28 +67,22 @@ namespace DarkMultiPlayerServer
                 DarkLog.Debug(modName + " attemped to send a null message");
                 return;
             }
-            ServerMessage newMessage = new ServerMessage();
-            newMessage.type = ServerMessageType.MOD_DATA;
-            using (MessageWriter mw = new MessageWriter())
+            Messages.ServerClient_ModDataSend msg = new Messages.ServerClient_ModDataSend
             {
-                mw.Write<string>(modName);
-                mw.Write<byte[]>(messageData);
-                newMessage.data = mw.GetMessageBytes();
-            }
-            ClientHandler.SendToClient(client, newMessage , highPriority);
+                name = modName,
+                data = messageData
+            };
+            WorldManager.Instance.SendOrdered(client, msg);
         }
 
         public static void SendDMPModMessageToAll(ClientObject excludeClient, string modName, byte[] messageData, bool highPriority)
         {
-            ServerMessage newMessage = new ServerMessage();
-            newMessage.type = ServerMessageType.MOD_DATA;
-            using (MessageWriter mw = new MessageWriter())
+            Messages.ServerClient_ModDataSend msg = new Messages.ServerClient_ModDataSend
             {
-                mw.Write<string>(modName);
-                mw.Write<byte[]>(messageData);
-                newMessage.data = mw.GetMessageBytes();
-            }
-            ClientHandler.SendToAll(excludeClient, newMessage, highPriority);
+                name = modName,
+                data = messageData
+            };
+            WorldManager.Instance.BroadcastBut(excludeClient, msg);
         }
        
 
