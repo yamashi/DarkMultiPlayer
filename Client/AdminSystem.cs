@@ -8,17 +8,8 @@ namespace DarkMultiPlayer
 {
     public class AdminSystem
     {
-        private static AdminSystem singleton;
-        private List<string> serverAdmins = new List<string>();
-        private object adminLock = new object();
-
-        public static AdminSystem fetch
-        {
-            get
-            {
-                return singleton;
-            }
-        }
+        private List<string> m_serverAdmins = new List<string>();
+        private readonly object m_adminLock = new object();
 
         public void HandleAdminMessage(byte[] messageData)
         {
@@ -54,22 +45,22 @@ namespace DarkMultiPlayer
 
         private void RegisterServerAdmin(string adminName)
         {
-            lock (adminLock)
+            lock (m_adminLock)
             {
-                if (!serverAdmins.Contains(adminName))
+                if (!m_serverAdmins.Contains(adminName))
                 {
-                    serverAdmins.Add(adminName);
+                    m_serverAdmins.Add(adminName);
                 }
             }
         }
 
         private void UnregisterServerAdmin(string adminName)
         {
-            lock (adminLock)
+            lock (m_adminLock)
             {
-                if (serverAdmins.Contains(adminName))
+                if (m_serverAdmins.Contains(adminName))
                 {
-                    serverAdmins.Remove(adminName);
+                    m_serverAdmins.Remove(adminName);
                 }
             }
         }
@@ -90,18 +81,15 @@ namespace DarkMultiPlayer
         /// <param name="playerName">Player name to check for admin.</param>
         public bool IsAdmin(string playerName)
         {
-            lock (adminLock)
+            lock (m_adminLock)
             {
-                return serverAdmins.Contains(playerName);
+                return m_serverAdmins.Contains(playerName);
             }
         }
 
-        public static void Reset()
+        public void Reset()
         {
-            lock (Client.eventLock)
-            {
-                singleton = new AdminSystem();
-            }
+            m_serverAdmins.Clear();
         }
     }
 }
