@@ -45,6 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChatModel.cs" />
+    <Compile Include="ChatView.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="ConfigNodeSerializer.cs" />
@@ -63,11 +65,11 @@
     <Compile Include="ModWorker.cs" />
     <Compile Include="ModWindow.cs" />
     <Compile Include="CraftLibraryWorker.cs" />
-    <Compile Include="ChatWorker.cs" />
+    <Compile Include="ChatController.cs" />
     <Compile Include="UniverseSyncCache.cs" />
     <Compile Include="ScreenshotWorker.cs" />
     <Compile Include="LockSystem.cs" />
-    <Compile Include="AsteroidWorker.cs" />
+    <Compile Include="AsteroidManager.cs" />
     <Compile Include="PlayerColorWorker.cs" />
     <Compile Include="OptionsWindow.cs" />
     <Compile Include="UniverseConverter.cs" />
