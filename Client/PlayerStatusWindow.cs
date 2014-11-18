@@ -106,7 +106,7 @@ namespace DarkMultiPlayer
 
         private void Update()
         {
-            display = Client.fetch.gameRunning;
+            display = Client.Instance.gameRunning;
             if (display)
             {
                 safeMinimized = minmized;
@@ -165,11 +165,11 @@ namespace DarkMultiPlayer
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             GUIStyle chatButtonStyle = buttonStyle;
-            if (ChatWorker.fetch.chatButtonHighlighted)
+            if (Client.Instance.ChatManager.ChatActive)
             {
                 chatButtonStyle = highlightStyle;
             }
-            ChatWorker.fetch.display = GUILayout.Toggle(ChatWorker.fetch.display, "Chat", chatButtonStyle);
+            Client.Instance.ChatManager.Display = GUILayout.Toggle(Client.Instance.ChatManager.Display, "Chat", chatButtonStyle);
             CraftLibraryWorker.fetch.display = GUILayout.Toggle(CraftLibraryWorker.fetch.display, "Craft", buttonStyle);
             DebugWindow.fetch.display = GUILayout.Toggle(DebugWindow.fetch.display, "Debug", buttonStyle);
             GUIStyle screenshotButtonStyle = buttonStyle;
@@ -243,7 +243,7 @@ namespace DarkMultiPlayer
 
         private void CheckWindowLock()
         {
-            if (!Client.fetch.gameRunning)
+            if (!Client.Instance.gameRunning)
             {
                 RemoveWindowLock();
                 return;
@@ -567,11 +567,11 @@ namespace DarkMultiPlayer
             GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
             GUIStyle chatButtonStyle = buttonStyle;
-            if (ChatWorker.fetch.chatButtonHighlighted)
+            if (Client.Instance.ChatManager.ChatActive)
             {
                 chatButtonStyle = highlightStyle;
             }
-            ChatWorker.fetch.display = GUILayout.Toggle(ChatWorker.fetch.display, "C", chatButtonStyle);
+            Client.Instance.ChatManager.Display = GUILayout.Toggle(Client.Instance.ChatManager.Display, "C", chatButtonStyle);
             DebugWindow.fetch.display = GUILayout.Toggle(DebugWindow.fetch.display, "D", buttonStyle);
             GUIStyle screenshotButtonStyle = buttonStyle;
             if (ScreenshotWorker.fetch.screenshotButtonHighlighted)

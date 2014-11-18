@@ -105,7 +105,7 @@ namespace DarkMultiPlayer
                             highlightedPlayers.Add(notifyPlayer);
                         }
                     }
-                    ChatWorker.fetch.QueueChannelMessage("Server", "", notifyPlayer + " shared screenshot");
+                    Client.Instance.ChatManager.QueueChannelMessage("Server", "", notifyPlayer + " shared screenshot");
                 }
 
                 //Update highlights
@@ -284,7 +284,7 @@ namespace DarkMultiPlayer
 
         private void CheckWindowLock()
         {
-            if (!Client.fetch.gameRunning)
+            if (!Client.Instance.gameRunning)
             {
                 RemoveWindowLock();
                 return;

@@ -10,7 +10,7 @@ namespace DarkMultiPlayer
     [KSPAddon(KSPAddon.Startup.Instantly, true)]
     public class Client : MonoBehaviour
     {
-        private static Client singleton;
+        private static Client m_instance;
         //Global state vars
         public string status;
         public bool startGame;
@@ -35,7 +35,7 @@ namespace DarkMultiPlayer
         public static List<Action> fixedUpdateEvent = new List<Action>();
         public static List<Action> drawEvent = new List<Action>();
         public static List<Action> resetEvent = new List<Action>();
-        public static object eventLock = new object();
+        public static readonly object eventLock = new object();
         //Chosen by a 2147483647 sided dice roll. Guaranteed to be random.
         public const int WINDOW_OFFSET = 1664952404;
         //Hack gravity fix.
@@ -43,16 +43,24 @@ namespace DarkMultiPlayer
         //Command line connect
         public static ServerEntry commandLineConnect;
 
+        private AdminSystem m_adminSystem;
+        private AsteroidManager m_asteroidManager;
+        private ChatController m_chatManager;
+
+        public AdminSystem AdminSystem { get { return m_adminSystem; } }
+        public AsteroidManager AsteroidManager { get { return m_asteroidManager; } }
+        public ChatController ChatManager { get { return m_chatManager; } }
+
         public Client()
         {
-            singleton = this;
+            m_instance = this;
         }
 
-        public static Client fetch
+        public static Client Instance
         {
             get
             {
-                return singleton;
+                return m_instance;
             }
         }
 
@@ -60,6 +68,11 @@ namespace DarkMultiPlayer
         {
             Profiler.DMPReferenceTime.Start();
             GameObject.DontDestroyOnLoad(this);
+
+            m_adminSystem = new AdminSystem();
+            m_asteroidManager = new AsteroidManager();
+            m_chatManager = new ChatController();
+
             assemblyPath = new DirectoryInfo(Assembly.GetExecutingAssembly().Location).FullName;
             string kspPath = new DirectoryInfo(KSPUtil.ApplicationRootPath).FullName;
             //I find my abuse of Path.Combine distrubing.
@@ -82,9 +95,9 @@ namespace DarkMultiPlayer
             lock (eventLock)
             {
                 resetEvent.Add(LockSystem.Reset);
-                resetEvent.Add(AdminSystem.Reset);
-                resetEvent.Add(AsteroidWorker.Reset);
-                resetEvent.Add(ChatWorker.Reset);
+                resetEvent.Add(m_adminSystem.Reset);
+                resetEvent.Add(m_asteroidManager.Reset);
+                resetEvent.Add(ChatManager.Reset);
                 resetEvent.Add(CraftLibraryWorker.Reset);
                 resetEvent.Add(DebugWindow.Reset);
                 resetEvent.Add(DynamicTickWorker.Reset);
@@ -528,7 +541,9 @@ namespace DarkMultiPlayer
             //.Start() seems to stupidly .Load() somewhere - Let's overwrite it so it loads correctly.
             GamePersistence.SaveGame(HighLogic.CurrentGame, "persistent", HighLogic.SaveFolder, SaveMode.OVERWRITE);
             HighLogic.CurrentGame.Start();
-            ChatWorker.fetch.display = true;
+
+            m_chatManager.Display = true;
+
             DarkLog.Debug("Started!");
         }
 

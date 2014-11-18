@@ -1230,7 +1230,7 @@ namespace DarkMultiPlayer
                             catch
                             {
                                 DarkLog.Debug("WARNING: Protovessel " + pv.vesselID + ", name: " + pv.vesselName + " is DAMAGED!. Skipping load.");
-                                ChatWorker.fetch.PMMessageServer("WARNING: Protovessel " + pv.vesselID + ", name: " + pv.vesselName + " is DAMAGED!. Skipping load.");
+                                Client.Instance.ChatManager.PMMessageServer("WARNING: Protovessel " + pv.vesselID + ", name: " + pv.vesselName + " is DAMAGED!. Skipping load.");
                                 protovesselIsOk = false;
                             }
                             if (protovesselIsOk)
@@ -1527,7 +1527,7 @@ namespace DarkMultiPlayer
                         if (possibleAsteroid.protoPartSnapshots[0].partName == "PotatoRoid")
                         {
                             DarkLog.Debug("Registering remote server asteroid");
-                            AsteroidWorker.fetch.RegisterServerAsteroid(possibleAsteroid.vesselID.ToString());
+                            Client.Instance.AsteroidManager.RegisterServerAsteroid(possibleAsteroid.vesselID.ToString());
                         }
                     }
                 }

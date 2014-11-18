@@ -66,7 +66,7 @@ namespace DarkMultiPlayer
 
         private void Update()
         {
-            status = Client.fetch.status;
+            status = Client.Instance.status;
             selectedSafe = selected;
             addingServerSafe = addingServer;
             display = (HighLogic.LoadedScene == GameScenes.MAINMENU);

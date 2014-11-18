@@ -71,7 +71,7 @@ namespace DarkMultiPlayer
                 DarkLog.Debug("User accepted disclaimer - Enabling DarkMultiPlayer");
                 display = false;
                 Settings.fetch.disclaimerAccepted = 1;
-                Client.fetch.modDisabled = false;
+                Client.Instance.modDisabled = false;
                 Settings.fetch.SaveSettings();
             }
             if (GUILayout.Button("I decline - Disable DarkMultiPlayer"))

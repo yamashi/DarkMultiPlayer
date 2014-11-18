@@ -89,12 +89,12 @@ namespace DarkMultiPlayer
 
             if (state == ClientState.CONNECTED)
             {
-                Client.fetch.status = "Connected";
+                Client.Instance.status = "Connected";
             }
 
             if (state == ClientState.HANDSHAKING)
             {
-                Client.fetch.status = "Handshaking";
+                Client.Instance.status = "Handshaking";
             }
 
             if (state == ClientState.AUTHENTICATED)
@@ -102,7 +102,7 @@ namespace DarkMultiPlayer
                 NetworkWorker.fetch.SendPlayerStatus(PlayerStatusWorker.fetch.myPlayerStatus);
                 DarkLog.Debug("Sending time sync!");
                 state = ClientState.TIME_SYNCING;
-                Client.fetch.status = "Syncing server clock";
+                Client.Instance.status = "Syncing server clock";
                 SendTimeSync();
             }
             if (TimeSyncer.fetch.synced && state == ClientState.TIME_SYNCING)
@@ -113,20 +113,20 @@ namespace DarkMultiPlayer
             if (state == ClientState.TIME_SYNCED)
             {
                 DarkLog.Debug("Requesting kerbals!");
-                Client.fetch.status = "Syncing kerbals";
+                Client.Instance.status = "Syncing kerbals";
                 state = ClientState.SYNCING_KERBALS;
                 SendKerbalsRequest();
             }
             if (state == ClientState.VESSELS_SYNCED)
             {
                 DarkLog.Debug("Vessels Synced!");
-                Client.fetch.status = "Syncing universe time";
+                Client.Instance.status = "Syncing universe time";
                 state = ClientState.TIME_LOCKING;
                 //The subspaces are held in the wrap control messages, but the warp worker will create a new subspace if we aren't locked.
                 //Process the messages so we get the subspaces, but don't enable the worker until the game is started.
                 WarpWorker.fetch.ProcessWarpMessages();
                 TimeSyncer.fetch.workerEnabled = true;
-                ChatWorker.fetch.workerEnabled = true;
+                Client.Instance.ChatManager.workerEnabled = true;
                 PlayerColorWorker.fetch.workerEnabled = true;
                 FlagSyncer.fetch.workerEnabled = true;
                 FlagSyncer.fetch.SendFlagList();
@@ -138,17 +138,17 @@ namespace DarkMultiPlayer
                 {
                     DarkLog.Debug("Time Locked!");
                     DarkLog.Debug("Starting Game!");
-                    Client.fetch.status = "Starting game";
+                    Client.Instance.status = "Starting game";
                     state = ClientState.STARTING;
-                    Client.fetch.startGame = true;
+                    Client.Instance.startGame = true;
                 }
             }
             if ((state == ClientState.STARTING) && (HighLogic.LoadedScene == GameScenes.SPACECENTER))
             {
                 state = ClientState.RUNNING;
-                Client.fetch.status = "Running";
-                Client.fetch.gameRunning = true;
-                AsteroidWorker.fetch.workerEnabled = true;
+                Client.Instance.status = "Running";
+                Client.Instance.gameRunning = true;
+                Client.Instance.AsteroidManager.Enable();
                 VesselWorker.fetch.workerEnabled = true;
                 PlayerStatusWorker.fetch.workerEnabled = true;
                 ScenarioWorker.fetch.workerEnabled = true;
@@ -211,7 +211,7 @@ namespace DarkMultiPlayer
             if (state == ClientState.DISCONNECTED)
             {
                 DarkLog.Debug("Trying to connect to " + address + ", port " + port);
-                Client.fetch.status = "Connecting to " + address + " port " + port;
+                Client.Instance.status = "Connecting to " + address + " port " + port;
                 sendMessageQueueHigh = new Queue<ClientMessage>();
                 sendMessageQueueSplit = new Queue<ClientMessage>();
                 sendMessageQueueLow = new Queue<ClientMessage>();
@@ -239,7 +239,7 @@ namespace DarkMultiPlayer
                                 if (testAddress.AddressFamily == AddressFamily.InterNetwork || testAddress.AddressFamily == AddressFamily.InterNetworkV6)
                                 {
                                     Interlocked.Increment(ref connectingThreads);
-                                    Client.fetch.status = "Connecting";
+                                    Client.Instance.status = "Connecting";
                                     lastSendTime = UnityEngine.Time.realtimeSinceStartup;
                                     lastReceiveTime = UnityEngine.Time.realtimeSinceStartup;
                                     state = ClientState.CONNECTING;
@@ -255,28 +255,28 @@ namespace DarkMultiPlayer
                             if (addressToConnectTo.Count == 0)
                             {
                                 DarkLog.Debug("DNS does not contain a valid address entry");
-                                Client.fetch.status = "DNS does not contain a valid address entry";
+                                Client.Instance.status = "DNS does not contain a valid address entry";
                                 return;
                             }
                         }
                         else
                         {
                             DarkLog.Debug("Address is not a IP or DNS name");
-                            Client.fetch.status = "Address is not a IP or DNS name";
+                            Client.Instance.status = "Address is not a IP or DNS name";
                             return;
                         }
                     }
                     catch (Exception e)
                     {
                         DarkLog.Debug("DNS Error: " + e.ToString());
-                        Client.fetch.status = "DNS Error: " + e.Message;
+                        Client.Instance.status = "DNS Error: " + e.Message;
                         return;
                     }
                 }
                 else
                 {
                     Interlocked.Increment(ref connectingThreads);
-                    Client.fetch.status = "Connecting";
+                    Client.Instance.status = "Connecting";
                     lastSendTime = UnityEngine.Time.realtimeSinceStartup;
                     lastReceiveTime = UnityEngine.Time.realtimeSinceStartup;
                     state = ClientState.CONNECTING;
@@ -309,7 +309,7 @@ namespace DarkMultiPlayer
                             clientConnection = testConnection;
                             //Timeout didn't expire.
                             DarkLog.Debug("Connected to " + destination.Address + " port " + destination.Port);
-                            Client.fetch.status = "Connected";
+                            Client.Instance.status = "Connected";
                             state = ClientState.CONNECTED;
                             sendThread = new Thread(new ThreadStart(SendThreadMain));
                             sendThread.IsBackground = true;
@@ -360,7 +360,7 @@ namespace DarkMultiPlayer
                 if ((UnityEngine.Time.realtimeSinceStartup - lastReceiveTime) > (Common.INITIAL_CONNECTION_TIMEOUT / 1000))
                 {
                     Disconnect("Failed to connect!");
-                    Client.fetch.status = "Failed to connect - no reply";
+                    Client.Instance.status = "Failed to connect - no reply";
                     if (connectThread != null)
                     {
                         try
@@ -403,13 +403,13 @@ namespace DarkMultiPlayer
                     if (!HighLogic.LoadedSceneIsEditor && !HighLogic.LoadedSceneIsFlight)
                     {
                         NetworkWorker.fetch.SendDisconnect("Force quit to main menu");
-                        Client.fetch.forceQuit = true;
+                        Client.Instance.forceQuit = true;
                     }
                     else
                     {
-                        Client.fetch.displayDisconnectMessage = true;
+                        Client.Instance.displayDisconnectMessage = true;
                     }
-                    Client.fetch.status = reason;
+                    Client.Instance.status = reason;
                     state = ClientState.DISCONNECTED;
 
                     try
@@ -814,7 +814,7 @@ namespace DarkMultiPlayer
                         HandleWarpControl(message.data);
                         break;
                     case ServerMessageType.ADMIN_SYSTEM:
-                        AdminSystem.fetch.HandleAdminMessage(message.data);
+                        Client.Instance.AdminSystem.HandleAdminMessage(message.data);
                         break;
                     case ServerMessageType.LOCK_SYSTEM:
                         LockSystem.fetch.HandleLockMessage(message.data);
@@ -971,7 +971,7 @@ namespace DarkMultiPlayer
                                 string[] channelList = mr.Read<string[]>();
                                 foreach (string channelName in channelList)
                                 {
-                                    ChatWorker.fetch.QueueChatJoin(playerName, channelName);
+                                    Client.Instance.ChatManager.QueueChatJoin(playerName, channelName);
                                 }
                             }
                         }
@@ -980,14 +980,14 @@ namespace DarkMultiPlayer
                         {
                             string playerName = mr.Read<string>();
                             string channelName = mr.Read<string>();
-                            ChatWorker.fetch.QueueChatJoin(playerName, channelName);
+                            Client.Instance.ChatManager.QueueChatJoin(playerName, channelName);
                         }
                         break;
                     case ChatMessageType.LEAVE:
                         {
                             string playerName = mr.Read<string>();
                             string channelName = mr.Read<string>();
-                            ChatWorker.fetch.QueueChatLeave(playerName, channelName);
+                            Client.Instance.ChatManager.QueueChatLeave(playerName, channelName);
                         }
                         break;
                     case ChatMessageType.CHANNEL_MESSAGE:
@@ -995,7 +995,7 @@ namespace DarkMultiPlayer
                             string playerName = mr.Read<string>();
                             string channelName = mr.Read<string>();
                             string channelMessage = mr.Read<string>();
-                            ChatWorker.fetch.QueueChannelMessage(playerName, channelName, channelMessage);
+                            Client.Instance.ChatManager.QueueChannelMessage(playerName, channelName, channelMessage);
                         }
                         break;
                     case ChatMessageType.PRIVATE_MESSAGE:
@@ -1005,14 +1005,14 @@ namespace DarkMultiPlayer
                             string privateMessage = mr.Read<string>();
                             if (toPlayer == Settings.fetch.playerName || fromPlayer == Settings.fetch.playerName)
                             {
-                                ChatWorker.fetch.QueuePrivateMessage(fromPlayer, toPlayer, privateMessage);
+                                Client.Instance.ChatManager.QueuePrivateMessage(fromPlayer, toPlayer, privateMessage);
                             }
                         }
                         break;
                     case ChatMessageType.CONSOLE_MESSAGE:
                         {
                             string message = mr.Read<string>();
-                            ChatWorker.fetch.QueueSystemMessage(message);
+                            Client.Instance.ChatManager.QueueSystemMessage(message);
                         }
                         break;
                 }
@@ -1024,13 +1024,13 @@ namespace DarkMultiPlayer
             using (MessageReader mr = new MessageReader(messageData, false))
             {
                 WarpWorker.fetch.warpMode = (WarpMode)mr.Read<int>();
-                Client.fetch.gameMode = (GameMode)mr.Read<int>();
-                Client.fetch.serverAllowCheats = mr.Read<bool>();
+                Client.Instance.gameMode = (GameMode)mr.Read<int>();
+                Client.Instance.serverAllowCheats = mr.Read<bool>();
                 numberOfKerbals = mr.Read<int>();
                 numberOfVessels = mr.Read<int>();
                 ScreenshotWorker.fetch.screenshotHeight = mr.Read<int>();
-                AsteroidWorker.fetch.maxNumberOfUntrackedAsteroids = mr.Read<int>();
-                ChatWorker.fetch.consoleIdentifier = mr.Read<string>();
+                Client.Instance.AsteroidManager.MaxUntrackedAsteroids = mr.Read<int>();
+                Client.Instance.ChatManager.ConsoleId = mr.Read<string>();
             }
         }
 
@@ -1054,7 +1054,7 @@ namespace DarkMultiPlayer
             using (MessageReader mr = new MessageReader(messageData, false))
             {
                 string playerName = mr.Read<string>();
-                ChatWorker.fetch.QueueChannelMessage(ChatWorker.fetch.consoleIdentifier, "", playerName + " has joined the server");
+                Client.Instance.ChatManager.QueueChannelMessage(Client.Instance.ChatManager.ConsoleId, "", playerName + " has joined the server");
             }
         }
 
@@ -1065,9 +1065,9 @@ namespace DarkMultiPlayer
                 string playerName = mr.Read<string>();
                 WarpWorker.fetch.RemovePlayer(playerName);
                 PlayerStatusWorker.fetch.RemovePlayerStatus(playerName);
-                ChatWorker.fetch.QueueRemovePlayer(playerName);
+                Client.Instance.ChatManager.QueueRemovePlayer(playerName);
                 LockSystem.fetch.ReleasePlayerLocks(playerName);
-                ChatWorker.fetch.QueueChannelMessage(ChatWorker.fetch.consoleIdentifier, "", playerName + " has left the server");
+                Client.Instance.ChatManager.QueueChannelMessage(Client.Instance.ChatManager.ConsoleId, "", playerName + " has left the server");
             }
         }
 
@@ -1118,7 +1118,7 @@ namespace DarkMultiPlayer
             {
                 if (numberOfKerbals != 0)
                 {
-                    Client.fetch.status = "Syncing kerbals " + numberOfKerbalsReceived + "/" + numberOfKerbals + " (" + (int)((numberOfKerbalsReceived / (float)numberOfKerbals) * 100) + "%)";
+                    Client.Instance.status = "Syncing kerbals " + numberOfKerbalsReceived + "/" + numberOfKerbals + " (" + (int)((numberOfKerbalsReceived / (float)numberOfKerbals) * 100) + "%)";
                 }
             }
         }
@@ -1127,13 +1127,13 @@ namespace DarkMultiPlayer
         {
             state = ClientState.KERBALS_SYNCED;
             DarkLog.Debug("Kerbals Synced!");
-            Client.fetch.status = "Kerbals synced";
+            Client.Instance.status = "Kerbals synced";
         }
 
         private void HandleVesselList(byte[] messageData)
         {
             state = ClientState.SYNCING_VESSELS;
-            Client.fetch.status = "Syncing vessels";
+            Client.Instance.status = "Syncing vessels";
             using (MessageReader mr = new MessageReader(messageData, false))
             {
                 List<string> serverVessels = new List<string>(mr.Read<string[]>());
@@ -1177,7 +1177,7 @@ namespace DarkMultiPlayer
                 }
                 if (numberOfVessels != 0)
                 {
-                    Client.fetch.status = "Syncing vessels " + numberOfVesselsReceived + "/" + numberOfVessels + " (" + (int)((numberOfVesselsReceived / (float)numberOfVessels) * 100) + "%)";
+                    Client.Instance.status = "Syncing vessels " + numberOfVesselsReceived + "/" + numberOfVessels + " (" + (int)((numberOfVesselsReceived / (float)numberOfVessels) * 100) + "%)";
                 }
                 SendVesselsRequest(requestedObjects.ToArray());
             }
@@ -1213,7 +1213,7 @@ namespace DarkMultiPlayer
             {
                 if (numberOfVessels != 0)
                 {
-                    Client.fetch.status = "Syncing vessels " + numberOfVesselsReceived + "/" + numberOfVessels + " (" + (int)((numberOfVesselsReceived / (float)numberOfVessels) * 100) + "%)";
+                    Client.Instance.status = "Syncing vessels " + numberOfVesselsReceived + "/" + numberOfVessels + " (" + (int)((numberOfVesselsReceived / (float)numberOfVessels) * 100) + "%)";
                 }
             }
         }
@@ -1366,7 +1366,7 @@ namespace DarkMultiPlayer
                             cce.craftType = (CraftType)mr.Read<int>();
                             cce.craftName = mr.Read<string>();
                             CraftLibraryWorker.fetch.QueueCraftAdd(cce);
-                            ChatWorker.fetch.QueueChannelMessage(ChatWorker.fetch.consoleIdentifier, "", cce.playerName + " shared " + cce.craftName + " (" + cce.craftType + ")");
+                            Client.Instance.ChatManager.QueueChannelMessage(Client.Instance.ChatManager.ConsoleId, "", cce.playerName + " shared " + cce.craftName + " (" + cce.craftType + ")");
                         }
                         break;
                     case CraftMessageType.DELETE_FILE:
@@ -1452,7 +1452,7 @@ namespace DarkMultiPlayer
             using (MessageReader mr = new MessageReader(messageData, false))
             {
                 int pingTime = (int)((DateTime.UtcNow.Ticks - mr.Read<long>()) / 10000f);
-                ChatWorker.fetch.QueueChannelMessage(ChatWorker.fetch.consoleIdentifier, "", "Ping: " + pingTime + "ms.");
+                Client.Instance.ChatManager.QueueChannelMessage(Client.Instance.ChatManager.ConsoleId, "", "Ping: " + pingTime + "ms.");
             }
 
         }
@@ -1465,7 +1465,7 @@ namespace DarkMultiPlayer
                 if (serverMotd != "")
                 {
                     displayMotd = true;
-                    ChatWorker.fetch.QueueChannelMessage(ChatWorker.fetch.consoleIdentifier, "", serverMotd);
+                    Client.Instance.ChatManager.QueueChannelMessage(Client.Instance.ChatManager.ConsoleId, "", serverMotd);
                 }
             }
         }
@@ -1832,7 +1832,7 @@ namespace DarkMultiPlayer
             if (state != ClientState.DISCONNECTING && state >= ClientState.CONNECTED)
             {
                 DarkLog.Debug("Sending disconnect message, reason: " + disconnectReason);
-                Client.fetch.status = "Disconnected: " + disconnectReason;
+                Client.Instance.status = "Disconnected: " + disconnectReason;
                 state = ClientState.DISCONNECTING;
                 byte[] messageBytes;
                 using (MessageWriter mw = new MessageWriter())

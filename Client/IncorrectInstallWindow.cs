@@ -53,8 +53,8 @@ namespace DarkMultiPlayer
             GUILayout.BeginVertical();
             GUI.DragWindow(moveRect);
             GUILayout.Label("DMP is not correctly installed");
-            GUILayout.Label("Current location: " + Client.fetch.assemblyPath);
-            GUILayout.Label("Correct location: " + Client.fetch.assemblyShouldBeInstalledAt);
+            GUILayout.Label("Current location: " + Client.Instance.assemblyPath);
+            GUILayout.Label("Correct location: " + Client.Instance.assemblyShouldBeInstalledAt);
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Close"))
             {

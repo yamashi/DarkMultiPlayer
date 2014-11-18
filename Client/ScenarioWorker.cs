@@ -50,7 +50,7 @@ namespace DarkMultiPlayer
             }
 
             //Blacklisted modes for sandbox
-            if (Client.fetch.gameMode == GameMode.SANDBOX)
+            if (Client.Instance.gameMode == GameMode.SANDBOX)
             {
                 switch (scenarioName)
                 {
@@ -61,7 +61,7 @@ namespace DarkMultiPlayer
             }
 
             //Blacklisted modules for science/sandbox
-            if (Client.fetch.gameMode == GameMode.SANDBOX || Client.fetch.gameMode == GameMode.SCIENCE)
+            if (Client.Instance.gameMode == GameMode.SANDBOX || Client.Instance.gameMode == GameMode.SCIENCE)
             {
                 switch (scenarioName)
                 {
@@ -136,7 +136,7 @@ namespace DarkMultiPlayer
                     }
                     else
                     {
-                        DarkLog.Debug("Skipping " + psm.moduleName + " scenario data in " + Client.fetch.gameMode + " mode");
+                        DarkLog.Debug("Skipping " + psm.moduleName + " scenario data in " + Client.Instance.gameMode + " mode");
                     }
                 }
             }
@@ -272,7 +272,7 @@ namespace DarkMultiPlayer
         {
             if (!IsScenarioModuleAllowed(entry.scenarioName))
             {
-                DarkLog.Debug("Skipped '" + entry.scenarioName + "' scenario data  in " + Client.fetch.gameMode + " mode");
+                DarkLog.Debug("Skipped '" + entry.scenarioName + "' scenario data  in " + Client.Instance.gameMode + " mode");
                 return;
             }
 
