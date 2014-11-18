@@ -35,38 +35,38 @@ namespace DarkMultiPlayer
             m_view.OnLeave += this.OnLeave;
             m_view.OnSend += this.HandleChatInput;
 
-            RegisterChatCommand("help", DisplayHelp, "Displays this help");
-            RegisterChatCommand("join", JoinChannel, "Joins a new chat channel");
-            RegisterChatCommand("query", StartQuery, "Starts a query");
-            RegisterChatCommand("leave", LeaveChannel, "Leaves the current channel");
-            RegisterChatCommand("part", LeaveChannel, "Leaves the current channel");
-            RegisterChatCommand("ping", ServerPing, "Pings the server");
-            RegisterChatCommand("motd", ServerMOTD, "Gets the current Message of the Day");
-            RegisterChatCommand("resize", ResizeChat, "Resized the chat window");
-            RegisterChatCommand("version", DisplayVersion, "Displays the current version of DMP");
+            RegisterChatCommand("help", DisplayHelpCommand, "Displays this help");
+            RegisterChatCommand("join", JoinChannelCommand, "Joins a new chat channel");
+            RegisterChatCommand("query", StartQueryCommand, "Starts a query");
+            RegisterChatCommand("leave", LeaveChannelCommand, "Leaves the current channel");
+            RegisterChatCommand("part", LeaveChannelCommand, "Leaves the current channel");
+            RegisterChatCommand("ping", ServerPingCommand, "Pings the server");
+            RegisterChatCommand("motd", ServerMOTDCommand, "Gets the current Message of the Day");
+            RegisterChatCommand("resize", ResizeChatCommand, "Resized the chat window");
+            RegisterChatCommand("version", DisplayVersionCommand, "Displays the current version of DMP");
         }
 
         private void PrintToSelectedChannel(string text)
         {
             if (m_model.Channels.Selected == null && m_model.Privates.Selected == null)
             {
-                QueueChannelMessage(Settings.fetch.playerName, "", text);
+                AddChannelMessage(Settings.fetch.playerName, "", text);
             }
             if (m_model.Channels.Selected != null && !m_model.IsConsole)
             {
-                QueueChannelMessage(Settings.fetch.playerName, m_model.Channels.Selected, text);
+                AddChannelMessage(Settings.fetch.playerName, m_model.Channels.Selected, text);
             }
             if (m_model.IsConsole)
             {
-                QueueSystemMessage(text);
+                AddSystemMessage(text);
             }
             if (m_model.Privates.Selected != null)
             {
-                QueuePrivateMessage(Settings.fetch.playerName, m_model.Privates.Selected, text);
+                AddPrivateMessage(Settings.fetch.playerName, m_model.Privates.Selected, text);
             }
         }
 
-        private void DisplayHelp(string commandArgs)
+        private void DisplayHelpCommand(string commandArgs)
         {
             List<ChatCommand> commands = new List<ChatCommand>();
             int longestName = 0;
@@ -86,13 +86,13 @@ namespace DarkMultiPlayer
             }
         }
 
-        private void DisplayVersion(string commandArgs)
+        private void DisplayVersionCommand(string commandArgs)
         {
             string versionMessage = (Common.PROGRAM_VERSION.Length == 40) ? "DarkMultiPlayer development build " + Common.PROGRAM_VERSION.Substring(0, 7) : "DarkMultiPlayer " + Common.PROGRAM_VERSION;
             PrintToSelectedChannel(versionMessage);
         }
 
-        private void JoinChannel(string commandArgs)
+        private void JoinChannelCommand(string commandArgs)
         {
             if (commandArgs != "" && commandArgs != "Global" && commandArgs != m_model.ConsoleId)
             {
@@ -114,12 +114,12 @@ namespace DarkMultiPlayer
             }
         }
 
-        private void LeaveChannel(string commandArgs)
+        private void LeaveChannelCommand(string commandArgs)
         {
             m_model.LeaveChannel(commandArgs);
         }
 
-        private void StartQuery(string commandArgs)
+        private void StartQueryCommand(string commandArgs)
         {
             bool playerFound = false;
             if (commandArgs != m_model.ConsoleId)
@@ -149,17 +149,17 @@ namespace DarkMultiPlayer
             }
         }
 
-        private void ServerPing(string commandArgs)
+        private void ServerPingCommand(string commandArgs)
         {
             NetworkWorker.fetch.SendPingRequest();
         }
 
-        private void ServerMOTD(string commandArgs)
+        private void ServerMOTDCommand(string commandArgs)
         {
             NetworkWorker.fetch.SendMotdRequest();
         }
 
-        private void ResizeChat(string commandArgs)
+        private void ResizeChatCommand(string commandArgs)
         {
             string func = "";
             float size = 0;
@@ -233,17 +233,17 @@ namespace DarkMultiPlayer
             }
         }
 
-        public void QueueChatJoin(string playerName, string channelName)
+        public void JoinChannel(string playerName, string channelName)
         {
             m_model.AddPlayerChannel(playerName, channelName);
         }
 
-        public void QueueChatLeave(string playerName, string channelName)
+        public void LeaveChannel(string playerName, string channelName)
         {
             m_model.RemovePlayerChannel(playerName, channelName);
         }
 
-        public void QueueChannelMessage(string fromPlayer, string channelName, string channelMessage)
+        public void AddChannelMessage(string fromPlayer, string channelName, string channelMessage)
         {
             if ((m_model.Channels.Selected == null && m_model.Privates.Selected == null && channelName != "") ||
                 (m_model.Channels.Selected != channelName))
@@ -276,7 +276,7 @@ namespace DarkMultiPlayer
             }
         }
 
-        public void QueuePrivateMessage(string fromPlayer, string toPlayer, string privateMessage)
+        public void AddPrivateMessage(string fromPlayer, string toPlayer, string privateMessage)
         {
             if (fromPlayer != Settings.fetch.playerName)
             {
@@ -303,12 +303,12 @@ namespace DarkMultiPlayer
             }
         }
 
-        public void QueueRemovePlayer(string playerName)
+        public void RemovePlayer(string playerName)
         {
             m_model.RemovePlayer(playerName);
         }
 
-        public void PMMessageServer(string message)
+        public void SendServerMessage(string message)
         {
             using (MessageWriter mw = new MessageWriter())
             {
@@ -320,7 +320,7 @@ namespace DarkMultiPlayer
             }
         }
 
-        public void QueueSystemMessage(string message)
+        public void AddSystemMessage(string message)
         {
             m_model.Channels.Highlight(m_model.ConsoleId);
             //Move the bar to the bottom on a new message
@@ -341,7 +341,7 @@ namespace DarkMultiPlayer
             }
         }
 
-        public void HandleChatInput(string input)
+        private void HandleChatInput(string input)
         {
             if (!input.StartsWith("/") || input.StartsWith("//"))
             {

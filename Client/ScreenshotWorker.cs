@@ -105,7 +105,7 @@ namespace DarkMultiPlayer
                             highlightedPlayers.Add(notifyPlayer);
                         }
                     }
-                    Client.Instance.ChatManager.QueueChannelMessage("Server", "", notifyPlayer + " shared screenshot");
+                    Client.Instance.ChatManager.AddChannelMessage("Server", "", notifyPlayer + " shared screenshot");
                 }
 
                 //Update highlights

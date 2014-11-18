@@ -1230,7 +1230,7 @@ namespace DarkMultiPlayer
                             catch
                             {
                                 DarkLog.Debug("WARNING: Protovessel " + pv.vesselID + ", name: " + pv.vesselName + " is DAMAGED!. Skipping load.");
-                                Client.Instance.ChatManager.PMMessageServer("WARNING: Protovessel " + pv.vesselID + ", name: " + pv.vesselName + " is DAMAGED!. Skipping load.");
+                                Client.Instance.ChatManager.SendServerMessage("WARNING: Protovessel " + pv.vesselID + ", name: " + pv.vesselName + " is DAMAGED!. Skipping load.");
                                 protovesselIsOk = false;
                             }
                             if (protovesselIsOk)

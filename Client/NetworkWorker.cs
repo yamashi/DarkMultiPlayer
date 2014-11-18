@@ -971,7 +971,7 @@ namespace DarkMultiPlayer
                                 string[] channelList = mr.Read<string[]>();
                                 foreach (string channelName in channelList)
                                 {
-                                    Client.Instance.ChatManager.QueueChatJoin(playerName, channelName);
+                                    Client.Instance.ChatManager.JoinChannel(playerName, channelName);
                                 }
                             }
                         }
@@ -980,14 +980,14 @@ namespace DarkMultiPlayer
                         {
                             string playerName = mr.Read<string>();
                             string channelName = mr.Read<string>();
-                            Client.Instance.ChatManager.QueueChatJoin(playerName, channelName);
+                            Client.Instance.ChatManager.JoinChannel(playerName, channelName);
                         }
                         break;
                     case ChatMessageType.LEAVE:
                         {
                             string playerName = mr.Read<string>();
                             string channelName = mr.Read<string>();
-                            Client.Instance.ChatManager.QueueChatLeave(playerName, channelName);
+                            Client.Instance.ChatManager.LeaveChannel(playerName, channelName);
                         }
                         break;
                     case ChatMessageType.CHANNEL_MESSAGE:
@@ -995,7 +995,7 @@ namespace DarkMultiPlayer
                             string playerName = mr.Read<string>();
                             string channelName = mr.Read<string>();
                             string channelMessage = mr.Read<string>();
-                            Client.Instance.ChatManager.QueueChannelMessage(playerName, channelName, channelMessage);
+                            Client.Instance.ChatManager.AddChannelMessage(playerName, channelName, channelMessage);
                         }
                         break;
                     case ChatMessageType.PRIVATE_MESSAGE:
@@ -1005,14 +1005,14 @@ namespace DarkMultiPlayer
                             string privateMessage = mr.Read<string>();
                             if (toPlayer == Settings.fetch.playerName || fromPlayer == Settings.fetch.playerName)
                             {
-                                Client.Instance.ChatManager.QueuePrivateMessage(fromPlayer, toPlayer, privateMessage);
+                                Client.Instance.ChatManager.AddPrivateMessage(fromPlayer, toPlayer, privateMessage);
                             }
                         }
                         break;
                     case ChatMessageType.CONSOLE_MESSAGE:
                         {
                             string message = mr.Read<string>();
-                            Client.Instance.ChatManager.QueueSystemMessage(message);
+                            Client.Instance.ChatManager.AddSystemMessage(message);
                         }
                         break;
                 }
@@ -1054,7 +1054,7 @@ namespace DarkMultiPlayer
             using (MessageReader mr = new MessageReader(messageData, false))
             {
                 string playerName = mr.Read<string>();
-                Client.Instance.ChatManager.QueueChannelMessage(Client.Instance.ChatManager.ConsoleId, "", playerName + " has joined the server");
+                Client.Instance.ChatManager.AddChannelMessage(Client.Instance.ChatManager.ConsoleId, "", playerName + " has joined the server");
             }
         }
 
@@ -1065,9 +1065,9 @@ namespace DarkMultiPlayer
                 string playerName = mr.Read<string>();
                 WarpWorker.fetch.RemovePlayer(playerName);
                 PlayerStatusWorker.fetch.RemovePlayerStatus(playerName);
-                Client.Instance.ChatManager.QueueRemovePlayer(playerName);
+                Client.Instance.ChatManager.RemovePlayer(playerName);
                 LockSystem.fetch.ReleasePlayerLocks(playerName);
-                Client.Instance.ChatManager.QueueChannelMessage(Client.Instance.ChatManager.ConsoleId, "", playerName + " has left the server");
+                Client.Instance.ChatManager.AddChannelMessage(Client.Instance.ChatManager.ConsoleId, "", playerName + " has left the server");
             }
         }
 
@@ -1366,7 +1366,7 @@ namespace DarkMultiPlayer
                             cce.craftType = (CraftType)mr.Read<int>();
                             cce.craftName = mr.Read<string>();
                             CraftLibraryWorker.fetch.QueueCraftAdd(cce);
-                            Client.Instance.ChatManager.QueueChannelMessage(Client.Instance.ChatManager.ConsoleId, "", cce.playerName + " shared " + cce.craftName + " (" + cce.craftType + ")");
+                            Client.Instance.ChatManager.AddChannelMessage(Client.Instance.ChatManager.ConsoleId, "", cce.playerName + " shared " + cce.craftName + " (" + cce.craftType + ")");
                         }
                         break;
                     case CraftMessageType.DELETE_FILE:
@@ -1452,7 +1452,7 @@ namespace DarkMultiPlayer
             using (MessageReader mr = new MessageReader(messageData, false))
             {
                 int pingTime = (int)((DateTime.UtcNow.Ticks - mr.Read<long>()) / 10000f);
-                Client.Instance.ChatManager.QueueChannelMessage(Client.Instance.ChatManager.ConsoleId, "", "Ping: " + pingTime + "ms.");
+                Client.Instance.ChatManager.AddChannelMessage(Client.Instance.ChatManager.ConsoleId, "", "Ping: " + pingTime + "ms.");
             }
 
         }
@@ -1465,7 +1465,7 @@ namespace DarkMultiPlayer
                 if (serverMotd != "")
                 {
                     displayMotd = true;
-                    Client.Instance.ChatManager.QueueChannelMessage(Client.Instance.ChatManager.ConsoleId, "", serverMotd);
+                    Client.Instance.ChatManager.AddChannelMessage(Client.Instance.ChatManager.ConsoleId, "", serverMotd);
                 }
             }
         }
